@@ -10,11 +10,11 @@ The project was called shareDrop. That name belongs to an existing WebRTC file-t
 
 Casing rule: `CrabShare` everywhere a human reads it, `crabshare` everywhere a machine reads it (crate, binary, directory, repo slug, domain).
 
-- [ ] `Cargo.toml` — package `name` to `crabshare`; this renames the binary too
-- [ ] `cargo check` — regenerates the `Cargo.lock` entry; don't hand-edit it
-- [ ] `static/index.html` — `<title>` and `<h1>`
-- [ ] `README.md` — heading, tagline, and repoint the `snapdrop.net` link at the GitHub repo (the domain is now a LimeWire ad page)
-- [ ] `AGENTS.md` — drop the "being renamed" note
+- [x] `Cargo.toml` — package `name` to `crabshare`; this renames the binary too
+- [x] `cargo check` — regenerates the `Cargo.lock` entry; don't hand-edit it
+- [x] `static/index.html` — `<title>` and `<h1>`
+- [x] `README.md` — heading, tagline, and repoint the `snapdrop.net` link at the GitHub repo (the domain is now a LimeWire ad page)
+- [x] `AGENTS.md` — drop the "being renamed" note
 - [ ] GitHub — rename `nchrisr/sharedrop` to `nchrisr/crabshare`, then `git remote set-url origin`
 - [ ] Rename the local working directory, last, after the commit
 
@@ -37,5 +37,5 @@ Tracked here so they don't get silently dropped. Rationale lives in [`DECISIONS.
 - TURN relay for peers that can't connect directly (symmetric NAT). Out of scope — D1.
 - Full-IP vs `/24` peer grouping on the public instance. Revisit at M7 — D4.
 - IPv6 support. Currently rejected outright. Revisit at M7 — D5.
-- Optional room codes for sharing across networks.
+- Sharing across networks: pair devices with a short code instead of grouping by network. Needs a decision on peers that can't connect directly (accept a TURN relay, or accept that some pairs can't connect); see D1.
 - Frontend framework choice. Vanilla is fine through M3.

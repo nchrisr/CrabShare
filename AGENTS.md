@@ -6,7 +6,7 @@
 
 A local-network text and file sharing web app, in the spirit of AirDrop and Snapdrop. A Rust server does WebRTC **signaling only**: it introduces peers and relays their connection setup. Content moves directly between browsers over WebRTC DataChannels.
 
-The project is being renamed from shareDrop to CrabShare (see `docs/ROADMAP.md`). Write `CrabShare` where a human reads it and `crabshare` where a machine reads it (crate, binary, repo, domain).
+Write `CrabShare` where a human reads it and `crabshare` where a machine reads it (crate, binary, repo, domain).
 
 ### Where things live
 

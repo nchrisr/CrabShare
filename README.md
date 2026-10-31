@@ -1,6 +1,8 @@
-# shareDrop
+# CrabShare
 
-A local network file and text sharing tool, inspired by Apple AirDrop and [Snapdrop](https://snapdrop.net). Built with a Rust core.
+A file and text sharing tool for devices on the same network, built with a Rust core.
+
+Privacy is the point. Files and text travel directly between browsers, encrypted in transit. The server only introduces devices to each other: it never sees, stores, or logs what you share.
 
 ## How it works
 
