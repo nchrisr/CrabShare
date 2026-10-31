@@ -15,8 +15,8 @@ Casing rule: `CrabShare` everywhere a human reads it, `crabshare` everywhere a m
 - [x] `static/index.html` — `<title>` and `<h1>`
 - [x] `README.md` — heading, tagline, and repoint the `snapdrop.net` link at the GitHub repo (the domain is now a LimeWire ad page)
 - [x] `AGENTS.md` — drop the "being renamed" note
-- [ ] GitHub — rename `nchrisr/sharedrop` to `nchrisr/crabshare`, then `git remote set-url origin`
-- [ ] Rename the local working directory, last, after the commit
+- [x] GitHub — rename `nchrisr/sharedrop` to `nchrisr/crabshare`, then `git remote set-url origin`
+- [x] Rename the local working directory, last, after the commit
 
 ## Milestones
 
