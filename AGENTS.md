@@ -55,7 +55,7 @@ There is no CI and there are no integration tests. Check `/ws` by hand with two 
 
 ## Part 2: Coding conventions
 
-**Principle:** prefer readability and explicitness over cleverness or terseness, and accept some verbosity for it, as long as performance doesn't suffer. The rules below cover only places where this project departs from default Rust practice or pins down something that is ambiguous by default.
+**Principle:** prefer code that is easy to read and spells things out over code that is clever or squeezed into as few lines as possible. Longer code is fine for this, as long as performance doesn't suffer. The rules below cover only places where this project departs from default Rust practice or pins down something that is ambiguous by default.
 
 - **Wire format.** `SignalingMessage` is JSON, internally tagged with `#[serde(tag = "type", rename_all = "snake_case")]`. New variants follow the same scheme (D8).
 - **Never trust client-supplied identity.** When relaying, overwrite `from` with the sender's real peer ID, and route to `to` only within the sender's subnet.

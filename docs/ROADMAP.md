@@ -28,7 +28,7 @@ Casing rule: `CrabShare` everywhere a human reads it, `crabshare` everywhere a m
 - [ ] **M5 — Text sharing (must).** Paste or copy text on one device, it appears on another device on the same network. This is the first milestone where the tool is actually useful to someone, and the shortest path to a demo — prioritise it over file sharing.
 - [ ] **M6 — File sharing.** Chunked file send over the DataChannel with progress; receiver saves it.
 - [ ] **M7 — Public-hosting readiness (must).** Trusted-proxy handling for client IP (`X-Forwarded-For`), TLS via proxy, IPv6 grouping, basic abuse limits. Blocks M8.
-- [ ] **M8 — Polish & release (must).** UI, device names/icons, README for self-hosters, and the public instance live at `crabshare.com` and `crabshare.app` — same privacy guarantees as self-hosting, no content ever touching the server.
+- [ ] **M8 — Polish & release (must).** UI, device names/icons, installable as a PWA (web app manifest and service worker; needs HTTPS, so self-hosted LAN installs depend on the LAN secure-context question in D3), README for self-hosters, and the public instance live at `crabshare.com` and `crabshare.app` — same privacy guarantees as self-hosting, no content ever touching the server.
 
 ## Deferred
 
