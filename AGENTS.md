@@ -66,6 +66,7 @@ There is no CI and there are no integration tests. Check `/ws` by hand with two 
 - **Use `expect` instead of `unwrap` outside tests.** Write the message as the assumption that broke, for example `.expect("bind listener")`.
 - **Peer map lock.** Take the lock inside an explicit `{ }` block and never `.await` while holding it. To message other peers, clone their `Sender`s inside the block and send after the block ends.
 - **Name the target type of a conversion.** Write `Some(x)` or `Ok(x)` rather than `.into()` when wrapping in `Option` or `Result`. In general, avoid `.into()` when the target type isn't visible on the same line.
+- **Struct fields: always write `field: value`,** even when the variable has the same name as the field. Don't use the shorthand. Clippy's `redundant_field_names` lint is turned off in `Cargo.toml` for this.
 - **Imports: one `use` per module path, no nested braces.** For example, `use axum::extract::ws::{WebSocket, WebSocketUpgrade};` rather than one merged `use axum::{...}` tree. Put them in three groups separated by blank lines: `std`, external crates, then `crate`. Stable rustfmt can't enforce either rule, so keep both by hand.
 - **Tests.** Pure functions get unit tests next to them, in the same file's `#[cfg(test)] mod tests`. `subnet_key` is the pattern.
 - Before committing, run `cargo fmt` and make sure there are no new `cargo clippy` warnings.

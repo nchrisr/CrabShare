@@ -12,3 +12,7 @@ tower-http = { version = "0.6.8", features = ["fs"] }
 tracing = "0.1.44"
 tracing-subscriber = { version = "0.3.23", features = ["env-filter"] }
 uuid = { version = "1.23.0", features = ["serde", "v4"] }
+
+[lints.clippy]
+# Struct fields are always written `field: value`, even when the names match (see AGENTS.md).
+redundant_field_names = "allow"
