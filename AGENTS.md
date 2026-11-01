@@ -63,7 +63,7 @@ There is no CI and there are no integration tests. Check `/ws` by hand with two 
 - **Wire format.** `SignalingMessage` is JSON, internally tagged with `#[serde(tag = "type", rename_all = "snake_case")]`. New variants follow the same scheme (D8).
 - **Never trust client-supplied identity.** When relaying, overwrite `from` with the sender's real peer ID, and route to `to` only within the sender's subnet.
 - **Client input must never panic the server.** Log malformed or unknown messages by type only, then skip them. The connection task keeps running.
-- **Use `expect` instead of `unwrap` outside tests.** Write the message as the assumption that broke, for example `.expect("bind listener")`.
+- **Use `expect` instead of `unwrap` outside tests.** Write the message as what should be true and why, so a crash explains itself: `.expect("subnet map should exist because it was just created")`.
 - **Peer map lock.** Take the lock inside an explicit `{ }` block and never `.await` while holding it. To message other peers, clone their `Sender`s inside the block and send after the block ends.
 - **Name the target type of a conversion.** Write `Some(x)` or `Ok(x)` rather than `.into()` when wrapping in `Option` or `Result`. In general, avoid `.into()` when the target type isn't visible on the same line.
 - **Struct fields: always write `field: value`,** even when the variable has the same name as the field. Don't use the shorthand. Clippy's `redundant_field_names` lint is turned off in `Cargo.toml` for this.

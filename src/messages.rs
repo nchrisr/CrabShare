@@ -25,4 +25,8 @@ pub enum SignalingMessage {
         to: Uuid,
         candidate: String,
     },
+    Welcome {
+        peer_id: Uuid,
+        peers: Vec<Uuid>,
+    },
 }

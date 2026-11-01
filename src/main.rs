@@ -4,7 +4,7 @@ mod peer;
 use axum::extract::{
     State,
     connect_info::ConnectInfo,
-    ws::{Message, WebSocket, WebSocketUpgrade, Utf8Bytes},
+    ws::{Message, Utf8Bytes, WebSocket, WebSocketUpgrade},
 };
 use axum::{Router, response::IntoResponse, routing::get};
 use std::{
@@ -72,18 +72,28 @@ async fn ws_handler(
 
         let (inbox_sender, mut inbox) =
             mpsc::channel::<SignalingMessage>(DEFAULT_MAX_MESSAGE_COUNT);
+        let welcome_sender = inbox_sender.clone();
 
-        {
+        let existing_peers = {
             let mut map = peers.lock().await;
             if !map.contains_key(&subnet) {
                 map.insert(subnet.clone(), HashMap::new());
             }
+
+            let existing_peers_list: Vec<Uuid> = map
+                .get(&subnet)
+                .expect("subnet map should exist because it was just created")
+                .keys()
+                .copied()
+                .collect();
             let peer = Peer {
                 id: peer_id,
                 subnet: subnet.clone(),
-                inbox_sender,
+                inbox_sender: inbox_sender,
             };
-            map.get_mut(&subnet).unwrap().insert(peer_id, peer);
+            map.get_mut(&subnet)
+                .expect("subnet map should exist because it was just created")
+                .insert(peer_id, peer);
 
             for key in map.keys() {
                 tracing::info!(
@@ -94,7 +104,18 @@ async fn ws_handler(
             }
 
             tracing::info!("Total active subnets: {}", map.len());
-        }
+            existing_peers_list
+        };
+
+        let welcome = SignalingMessage::Welcome {
+            peer_id: peer_id,
+            peers: existing_peers,
+        };
+
+        welcome_sender
+            .send(welcome)
+            .await
+            .expect("own inbox should be open because this task holds its receiver");
 
         loop {
             tokio::select! {
@@ -110,7 +131,7 @@ async fn ws_handler(
                         None => break,
                         Some(letter) => {
                             let json_msg = serde_json::to_string(&letter)
-                                .expect("serialize SignalingMessage to JSON");
+                                .expect("SignalingMessage should serialize because its fields are plain strings, UUIDs and lists");
                             let message = Utf8Bytes::from(json_msg);
                             let send_res = socket.send(Message::Text(message)).await;
 
