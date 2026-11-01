@@ -70,26 +70,32 @@ async fn ws_handler(
 
         let (inbox_sender, mut inbox) =
             mpsc::channel::<SignalingMessage>(DEFAULT_MAX_MESSAGE_COUNT);
-        let welcome_sender = inbox_sender.clone();
 
-        let (existing_peers, other_senders) = {
+        let other_peers = {
             let mut map = peers.lock().await;
             if !map.contains_key(&subnet) {
                 map.insert(subnet.clone(), HashMap::new());
             }
 
-            let existing_peers_list: Vec<Uuid> = map
-                .get(&subnet)
-                .expect("subnet map should exist because it was just created")
-                .keys()
-                .copied()
-                .collect();
-            let other_senders: Vec<mpsc::Sender<SignalingMessage>> = map
+            let other_peers: Vec<(Uuid, mpsc::Sender<SignalingMessage>)> = map
                 .get(&subnet)
                 .expect("subnet map should exist because it was just created")
                 .values()
-                .map(|other_peer| other_peer.inbox_sender.clone())
+                .map(|other_peer| (other_peer.id, other_peer.inbox_sender.clone()))
                 .collect();
+
+            // Queue the welcome before this peer is visible to anyone else, so it is
+            // always the first message the browser receives. try_send doesn't wait,
+            // which keeps the no-await-under-the-lock rule.
+            let existing_peers: Vec<Uuid> = other_peers.iter().map(|(id, _)| *id).collect();
+            let welcome = SignalingMessage::Welcome {
+                peer_id: peer_id,
+                peers: existing_peers,
+            };
+            inbox_sender
+                .try_send(welcome)
+                .expect("new inbox should have room because nothing has been sent to it yet");
+
             let peer = Peer {
                 id: peer_id,
                 subnet: subnet.clone(),
@@ -108,29 +114,20 @@ async fn ws_handler(
             }
 
             tracing::info!("Total active subnets: {}", map.len());
-            (existing_peers_list, other_senders)
+            other_peers
         };
 
-        for other_sender in other_senders {
+        for (other_peer_id, other_peer_sender) in other_peers {
             let joined = SignalingMessage::PeerJoined { peer_id: peer_id };
-            let send_result = other_sender.send(joined).await;
+            let send_result = other_peer_sender.send(joined).await;
             if send_result.is_err() {
                 tracing::debug!(
-                    "could not tell a peer that {} joined: it disconnected",
+                    "could not tell peer {} that {} joined: it disconnected",
+                    other_peer_id,
                     peer_id
                 );
             }
         }
-
-        let welcome = SignalingMessage::Welcome {
-            peer_id: peer_id,
-            peers: existing_peers,
-        };
-
-        welcome_sender
-            .send(welcome)
-            .await
-            .expect("own inbox should be open because this task holds its receiver");
 
         loop {
             tokio::select! {
