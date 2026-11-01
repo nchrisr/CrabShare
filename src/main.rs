@@ -4,7 +4,7 @@ mod peer;
 use axum::extract::{
     State,
     connect_info::ConnectInfo,
-    ws::{WebSocket, WebSocketUpgrade},
+    ws::{Message, WebSocket, WebSocketUpgrade, Utf8Bytes},
 };
 use axum::{Router, response::IntoResponse, routing::get};
 use std::{
@@ -70,7 +70,8 @@ async fn ws_handler(
         tracing::info!("ID: {} assigned to new peer", peer_id);
         tracing::info!("Peer {} connected from subnet {}", peer_id, subnet);
 
-        let (inbox_sender, inbox) = mpsc::channel::<SignalingMessage>(DEFAULT_MAX_MESSAGE_COUNT);
+        let (inbox_sender, mut inbox) =
+            mpsc::channel::<SignalingMessage>(DEFAULT_MAX_MESSAGE_COUNT);
 
         {
             let mut map = peers.lock().await;
@@ -95,10 +96,30 @@ async fn ws_handler(
             tracing::info!("Total active subnets: {}", map.len());
         }
 
-        while let Some(msg) = socket.recv().await {
-            // handle message or just break out on error
-            if msg.is_err() {
-                break;
+        loop {
+            tokio::select! {
+                from_browser = socket.recv() => {
+                    match from_browser {
+                        None => break,
+                        Some(Err(_)) => break,
+                        Some(Ok(_)) => {},
+                    }
+                }
+                from_inbox = inbox.recv() => {
+                    match from_inbox {
+                        None => break,
+                        Some(letter) => {
+                            let json_msg = serde_json::to_string(&letter)
+                                .expect("serialize SignalingMessage to JSON");
+                            let message = Utf8Bytes::from(json_msg);
+                            let send_res = socket.send(Message::Text(message)).await;
+
+                            if send_res.is_err() {
+                                break;
+                            }
+                        }
+                    }
+                }
             }
         }
 
