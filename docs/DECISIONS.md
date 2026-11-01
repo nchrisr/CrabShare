@@ -107,7 +107,7 @@ Status legend: **settled** — deliberate, change only with a good reason. **fir
 
 ---
 
-## D10. Shared `crabshare-core` crate, compiled to WebAssembly for the browser - settled
+## D10. Shared `crabshare-core` crate, compiled to WebAssembly for the browser — settled
 
 **Context.** Files go browser to browser and never reach the server (D1), so hashing, chunking and verifying chunks have to run in the browser. The DataChannel already protects data in transit, but not against chunking or reassembly bugs at either end, and it can't resume a transfer once the channel closes.
 
