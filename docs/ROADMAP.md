@@ -26,9 +26,18 @@ Casing rule: `CrabShare` everywhere a human reads it, `crabshare` everywhere a m
 - [ ] **M3 — Frontend discovers peers.** Minimal page: connects to `/ws`, shows a list of peers on your subnet updating live.
 - [ ] **M4 — WebRTC DataChannel between two browsers.** Offer/answer/ICE exchange through the server; a DataChannel opens; send a "hello".
 - [ ] **M5 — Text sharing (must).** Paste or copy text on one device, it appears on another device on the same network. This is the first milestone where the tool is actually useful to someone, and the shortest path to a demo — prioritise it over file sharing.
-- [ ] **M6 — File sharing.** Chunked file send over the DataChannel with progress; receiver saves it.
+- [ ] **M6 — File sharing.** Chunked file send over the DataChannel with progress. The receiver writes chunks to disk as they arrive (never the whole file in memory), checks each chunk against the file's Merkle tree, and can resume an interrupted transfer by requesting only missing chunks. Uses `crabshare-core` compiled to WebAssembly (D10).
 - [ ] **M7 — Public-hosting readiness (must).** Trusted-proxy handling for client IP (`X-Forwarded-For`), TLS via proxy, IPv6 grouping, basic abuse limits. Blocks M8.
 - [ ] **M8 — Polish & release (must).** UI, device names/icons, installable as a PWA (web app manifest and service worker; needs HTTPS, so self-hosted LAN installs depend on the LAN secure-context question in D3), README for self-hosters, and the public instance live at `crabshare.com` and `crabshare.app` — same privacy guarantees as self-hosting, no content ever touching the server.
+
+## Parallel track: `crabshare-core`
+
+The file-verification library from D10. It doesn't depend on browser work, so it can be built alongside M3 to M5. It must be ready before M6.
+
+- [ ] **Workspace split.** Turn the repo into a Cargo workspace: the existing server crate plus `crabshare-core`. Starts after M2.
+- [ ] **Content hashing.** A hasher abstraction with more than one implementation, and a content ID type that identifies a file by its hash.
+- [ ] **Merkle tree.** Build a root from chunk hashes, produce inclusion proofs, verify a chunk against a root. Tested natively with `cargo test`.
+- [ ] **WebAssembly build.** Compile `crabshare-core` to Wasm and expose it to the frontend through `wasm-bindgen`. Needed for M6.
 
 ## Deferred
 
@@ -37,5 +46,5 @@ Tracked here so they don't get silently dropped. Rationale lives in [`DECISIONS.
 - TURN relay for peers that can't connect directly (symmetric NAT). Out of scope — D1.
 - Full-IP vs `/24` peer grouping on the public instance. Revisit at M7 — D4.
 - IPv6 support. Currently rejected outright. Revisit at M7 — D5.
-- Sharing across networks: pair devices with a short code instead of grouping by network. Needs a decision on peers that can't connect directly (accept a TURN relay, or accept that some pairs can't connect); see D1.
+- Sharing across networks: pair devices with a short code instead of grouping by network. The code would be checked with a PAKE (password-authenticated key exchange, for example the `spake2` crate), so both devices prove they know it without sending it. Needs a decision on peers that can't connect directly (accept a TURN relay, or accept that some pairs can't connect); see D1.
 - Frontend framework choice. Vanilla is fine through M3.
