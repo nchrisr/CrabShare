@@ -74,7 +74,7 @@ async fn ws_handler(
             mpsc::channel::<SignalingMessage>(DEFAULT_MAX_MESSAGE_COUNT);
         let welcome_sender = inbox_sender.clone();
 
-        let existing_peers = {
+        let (existing_peers, other_senders) = {
             let mut map = peers.lock().await;
             if !map.contains_key(&subnet) {
                 map.insert(subnet.clone(), HashMap::new());
@@ -85,6 +85,12 @@ async fn ws_handler(
                 .expect("subnet map should exist because it was just created")
                 .keys()
                 .copied()
+                .collect();
+            let other_senders: Vec<mpsc::Sender<SignalingMessage>> = map
+                .get(&subnet)
+                .expect("subnet map should exist because it was just created")
+                .values()
+                .map(|other_peer| other_peer.inbox_sender.clone())
                 .collect();
             let peer = Peer {
                 id: peer_id,
@@ -104,8 +110,19 @@ async fn ws_handler(
             }
 
             tracing::info!("Total active subnets: {}", map.len());
-            existing_peers_list
+            (existing_peers_list, other_senders)
         };
+
+        for other_sender in other_senders {
+            let joined = SignalingMessage::PeerJoined { peer_id: peer_id };
+            let send_result = other_sender.send(joined).await;
+            if send_result.is_err() {
+                tracing::debug!(
+                    "could not tell a peer that {} joined: it disconnected",
+                    peer_id
+                );
+            }
+        }
 
         let welcome = SignalingMessage::Welcome {
             peer_id: peer_id,
@@ -131,7 +148,7 @@ async fn ws_handler(
                         None => break,
                         Some(letter) => {
                             let json_msg = serde_json::to_string(&letter)
-                                .expect("SignalingMessage should serialize because its fields are plain strings, UUIDs and lists");
+                                .expect("SignalingMessage should always serialize to JSON");
                             let message = Utf8Bytes::from(json_msg);
                             let send_res = socket.send(Message::Text(message)).await;
 
