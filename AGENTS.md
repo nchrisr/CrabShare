@@ -20,6 +20,8 @@ docs/STATUS.md     maintainer's local notes on current state; gitignored, may no
 docs/DECISIONS.md  design decisions with rationale (D1, D2, …)
 ```
 
+**Referring to milestones and decisions.** `M2` means Milestone 2 in `docs/ROADMAP.md`, and `D10` means Decision 10 in `docs/DECISIONS.md`. When writing to someone, spell them out on first mention, with what they are: "Milestone 2 (M2, signaling)", "Decision 10 (D10 in `docs/DECISIONS.md`, the `crabshare-core` crate)".
+
 ### Build and run
 
 Rust edition 2024, stable toolchain.
