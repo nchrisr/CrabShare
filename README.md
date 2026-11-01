@@ -8,6 +8,28 @@ Privacy is the point. Files and text travel directly between browsers, encrypted
 
 Devices connect to a signaling server. Peers discover each other automatically by subnet and establish direct WebRTC connections for file and text transfer — no accounts, no cloud, no relay.
 
+```
+                    SIGNALING SERVER
+   ┌─────────────────────────────────────────────┐
+   │ peers, grouped by subnet                    │
+   │                                             │
+   │   192.168.1.x ──► { A, B, C }               │
+   │   10.0.0.x    ──► { D }                     │
+   └─────────────────────────────────────────────┘
+        ▲ │         ▲ │         ▲ │        ▲ │
+        │ ▼         │ ▼         │ ▼        │ ▼   one WebSocket per device
+   ┌─────────┐ ┌─────────┐ ┌─────────┐ ┌─────────┐
+   │ A       │ │ B       │ │ C       │ │ D       │
+   │ sees:   │ │ sees:   │ │ sees:   │ │ sees:   │
+   │  B, C   │ │  A, C   │ │  A, B   │ │ nobody  │
+   └─────────┘ └─────────┘ └─────────┘ └─────────┘
+   └───── same network (192.168.1.x) ────┘  other network
+```
+
+- **The server** keeps the list of connected devices, grouped by network. Devices only ever see others on their own network.
+- **Each device** gets a `welcome` with the devices already there when it connects, then a `peer_joined` or `peer_left` whenever that changes.
+- **To share**, two devices swap WebRTC connection details through the server, then open a direct, encrypted connection. Files and text go over that connection and never touch the server.
+
 ## Stack
 
 - **Backend:** Rust, [axum](https://github.com/tokio-rs/axum), tokio
