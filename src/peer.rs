@@ -5,5 +5,5 @@ use uuid::Uuid;
 pub struct Peer {
     pub id: Uuid,
     pub subnet: String,
-    pub sender: mpsc::Sender<SignalingMessage>,
+    pub inbox_sender: mpsc::Sender<SignalingMessage>,
 }

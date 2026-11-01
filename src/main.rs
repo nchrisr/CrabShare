@@ -70,7 +70,7 @@ async fn ws_handler(
         tracing::info!("ID: {} assigned to new peer", peer_id);
         tracing::info!("Peer {} connected from subnet {}", peer_id, subnet);
 
-        let (tx, rx) = mpsc::channel::<SignalingMessage>(DEFAULT_MAX_MESSAGE_COUNT);
+        let (inbox_sender, inbox) = mpsc::channel::<SignalingMessage>(DEFAULT_MAX_MESSAGE_COUNT);
 
         {
             let mut map = peers.lock().await;
@@ -80,7 +80,7 @@ async fn ws_handler(
             let peer = Peer {
                 id: peer_id,
                 subnet: subnet.clone(),
-                sender: tx,
+                inbox_sender,
             };
             map.get_mut(&subnet).unwrap().insert(peer_id, peer);
 
