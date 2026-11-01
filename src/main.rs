@@ -1,25 +1,23 @@
 mod messages;
 mod peer;
 
-use axum::extract::{
-    State,
-    connect_info::ConnectInfo,
-    ws::{Message, Utf8Bytes, WebSocket, WebSocketUpgrade},
-};
-use axum::{Router, response::IntoResponse, routing::get};
-use std::{
-    collections::HashMap,
-    net::{IpAddr, SocketAddr},
-    sync::Arc,
-};
-use tokio::{
-    net::TcpListener,
-    sync::{Mutex, mpsc},
-};
+use std::collections::HashMap;
+use std::net::{IpAddr, SocketAddr};
+use std::sync::Arc;
+
+use axum::Router;
+use axum::extract::State;
+use axum::extract::connect_info::ConnectInfo;
+use axum::extract::ws::{Message, Utf8Bytes, WebSocket, WebSocketUpgrade};
+use axum::response::IntoResponse;
+use axum::routing::get;
+use tokio::net::TcpListener;
+use tokio::sync::{Mutex, mpsc};
 use tower_http::services::ServeDir;
 use uuid::Uuid;
 
-use crate::{messages::SignalingMessage, peer::Peer};
+use crate::messages::SignalingMessage;
+use crate::peer::Peer;
 
 type PeerMap = Arc<Mutex<HashMap<String, HashMap<Uuid, Peer>>>>;
 
