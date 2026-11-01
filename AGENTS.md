@@ -49,7 +49,8 @@ There is no CI and there are no integration tests. Check `/ws` by hand with two 
 
 - **The server never stores or inspects transferred content.** It relays signaling only (D1).
 - **Logging.** Allowed: connection events, peer IDs, subnet keys, message *types*, counts, errors. Never logged: SDP or ICE payloads, file names or sizes, text content, anything from a DataChannel (D9).
-- **The backend is Rust.** Web technologies are used in `static/` only (D2).
+- **The backend is Rust.** Web technologies are used in `static/` only (D2). File hashing and verification in the browser is also Rust: a `crabshare-core` crate compiled to WebAssembly (D10, not built yet).
+- **File hashes and Merkle roots never go through signaling.** They travel only over the DataChannel (D10).
 - **Both deployment modes are first-class:** self-hosted on a LAN, and a public instance behind a reverse proxy (D3). Behind a proxy, `ConnectInfo` holds the proxy's IP, not the client's. Trusted-proxy handling is not built yet (M7).
 - Decisions marked **settled** in `docs/DECISIONS.md` change only together with an update to their entry. Record new design choices there.
 

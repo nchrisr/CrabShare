@@ -26,6 +26,8 @@ Status legend: **settled** — deliberate, change only with a good reason. **fir
 
 **Why.** A single static binary is easy for self-hosters to run.
 
+**Extended by D10.** Rust also runs in the browser, compiled to WebAssembly, for file hashing and verification.
+
 ---
 
 ## D3. Two deployment modes: self-hosted LAN and public instance — settled
@@ -102,3 +104,21 @@ Status legend: **settled** — deliberate, change only with a good reason. **fir
 - **Never:** SDP or ICE candidate payloads, file names or sizes, text content, anything from a DataChannel.
 
 **Why.** SDP and ICE contain local IPs and network topology; content is the user's. The public instance must be trustworthy without the user having to take anyone's word for it.
+
+---
+
+## D10. Shared `crabshare-core` crate, compiled to WebAssembly for the browser - settled
+
+**Context.** Files go browser to browser and never reach the server (D1), so hashing, chunking and verifying chunks have to run in the browser. The DataChannel already protects data in transit, but not against chunking or reassembly bugs at either end, and it can't resume a transfer once the channel closes.
+
+**Decision.**
+- Turn the repo into a Cargo workspace with two crates: `server` (the signaling server) and `crabshare-core` (content hashing, Merkle tree, chunk format and verification).
+- `crabshare-core` is plain Rust with no async runtime or server dependencies (no tokio, no axum), so it builds for both native and `wasm32` targets.
+- `crabshare-core` is compiled to WebAssembly and called from the frontend JavaScript through `wasm-bindgen`. Signaling and WebRTC setup stay in JavaScript in the browser; Wasm is used only for file work.
+- File hashes and Merkle roots travel only over the DataChannel, never through signaling. A file's hash identifies the file, so the server seeing it would reveal who shares what.
+
+**Why.** One implementation of the verification logic, tested natively with `cargo test`, and fast enough in the browser for large files. A Merkle tree over chunks lets a receiver verify each chunk as it arrives and resume an interrupted transfer by proving which chunks it already has.
+
+**Timing.** The workspace split happens when work on `crabshare-core` starts, after M2. The Wasm build is needed from M6 (file sharing). Nothing changes before then.
+
+**Name.** `crabshare-core` is a working name. A plain `core` would clash with Rust's built-in `core` library and is reserved on crates.io. The crate may get a standalone name before it is published.
