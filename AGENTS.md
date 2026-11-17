@@ -18,9 +18,32 @@ static/            frontend (plain HTML/CSS/JS), served as the router's fallback
 docs/ROADMAP.md    milestones, in order
 docs/STATUS.md     maintainer's local notes on current state; gitignored, may not exist
 docs/DECISIONS.md  design decisions with rationale (D1, D2, …)
+docs/specs/        approved plans for tier 2 and 3 changes, written with /spec
+.claude/           the /spec command and the spec-critic subagent
 ```
 
 **Referring to milestones and decisions.** `M2` means Milestone 2 in `docs/ROADMAP.md`, and `D10` means Decision 10 in `docs/DECISIONS.md`. When writing to someone, spell them out on first mention, with what they are: "Milestone 2 (M2, signaling)", "Decision 10 (D10 in `docs/DECISIONS.md`, the `crabshare-core` crate)".
+
+### Tiers
+
+Pick the tier before starting a change. If unsure, pick the higher one. Always say which you chose and why.
+
+| Tier | Covers | What happens |
+|---|---|---|
+| 1 | Docs, copy, renames, small isolated fixes | List what will change, then proceed |
+| 2 | New features and behaviour changes | Write a spec with `/spec` and wait for approval before coding |
+| 3 | The list below | As tier 2, but the `spec-critic` subagent attacks the spec first, and the owner reviews it closely |
+
+If a tier 1 change turns out bigger than it looked, stop and treat it as tier 2.
+
+A change is **tier 3** if it does any of these:
+
+1. Changes what the server sees, stores or logs, including new log lines that carry client data (D1, D9).
+2. Changes how a peer's identity is assigned or trusted, or how messages are routed between peers.
+3. Changes how peers are grouped: `subnet_key`, client IP handling, proxy headers, IPv6 (D3, D4, D5).
+4. Changes the wire format in a way an existing client would notice (D8).
+5. Changes hashing, content IDs, Merkle trees, chunk verification, or pairing and key exchange (D10).
+6. Changes the shared peer map, its locking, or how full inboxes are handled (D6, D7).
 
 ### Build and run
 
