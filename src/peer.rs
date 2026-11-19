@@ -3,8 +3,8 @@ use uuid::Uuid;
 
 use crate::messages::SignalingMessage;
 
+#[derive(Clone)]
 pub struct Peer {
     pub id: Uuid,
-    pub subnet: String,
     pub inbox_sender: mpsc::Sender<SignalingMessage>,
 }

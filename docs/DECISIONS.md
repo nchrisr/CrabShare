@@ -78,11 +78,15 @@ Status legend: **settled** — deliberate, change only with a good reason. **fir
 
 ## D7. Per-peer `mpsc` channel (capacity 32) as the outbound path — first-pass
 
-**Decision.** Each connection gets an `mpsc::channel::<SignalingMessage>(32)`. The `Sender` lives in `Peer` so other tasks can push messages to that peer; a task owned by the connection will drain the `Receiver` into the WebSocket.
+**Decision.** Each connection gets an `mpsc::channel::<SignalingMessage>(32)`. The `Sender` lives in `Peer` so other tasks can push messages to that peer; the connection's own task drains the `Receiver` into the WebSocket.
 
 **Why.** Standard actor-ish pattern: only the connection's own task writes to its socket, everyone else goes through the channel. Avoids sharing the socket sink between tasks.
 
-**Notes.** 32 is arbitrary. If a peer's channel is full, `send().await` will apply backpressure to whoever is relaying to it; `try_send` and drop is the alternative. Decide when implementing the relay.
+**Full inboxes (presence messages).** `peer_joined` and `peer_left` are sent with `try_send`. If a peer's inbox is full, its copy is dropped and logged at warn; nobody waits. Waiting let two connection tasks block on each other forever, and let one stuck peer stall every newcomer's `welcome`. A dropped message leaves that peer's list stale until it reconnects. See `docs/specs/2026-11-17-peer-left-broadcast.md`.
+
+**Socket writes** time out after 10 seconds, after which the connection ends and the normal cleanup runs. This only catches a peer that stays connected but stops reading: writes to a peer that vanished usually succeed into the OS send buffer. Vanished peers need a heartbeat, not built yet.
+
+**Notes.** 32 is arbitrary. Relay messages (`offer`, `answer`, `ice_candidate`) are still open: decide when implementing the relay.
 
 ---
 

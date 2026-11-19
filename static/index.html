@@ -1,9 +1,29 @@
 <!DOCTYPE html>
 <html lang="en">
     <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
         <title>CrabShare</title>
+        <link rel="stylesheet" href="style.css">
     </head>
     <body>
-        <h1>CrabShare</h1>
+        <main>
+            <header>
+                <h1>CrabShare</h1>
+                <p id="status" class="status" data-state="connecting">Connecting…</p>
+            </header>
+
+            <section class="me">
+                <p class="label">This device</p>
+                <p id="my-name" class="name">…</p>
+            </section>
+
+            <section>
+                <p class="label">On your network</p>
+                <ul id="peers" class="peers"></ul>
+                <p id="empty" class="empty">No other devices yet. Open this page on another device on the same Wi-Fi.</p>
+            </section>
+        </main>
+        <script src="app.js"></script>
     </body>
 </html>

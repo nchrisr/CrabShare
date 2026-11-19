@@ -1,0 +1,124 @@
+:root {
+    --bg: #f7f5f2;
+    --card: #ffffff;
+    --text: #1d1b19;
+    --muted: #6b665f;
+    --line: #e4e0da;
+    --accent: #d9502b;
+    --ok: #2f8a4c;
+    --warn: #b7791f;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --bg: #161514;
+        --card: #211f1d;
+        --text: #f1eeea;
+        --muted: #a39d95;
+        --line: #34312d;
+        --accent: #f0714a;
+        --ok: #5cc27d;
+        --warn: #e0a84a;
+    }
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    line-height: 1.4;
+}
+
+main {
+    max-width: 480px;
+    margin: 0 auto;
+    padding: 32px 16px;
+}
+
+header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 24px;
+}
+
+h1 {
+    margin: 0;
+    font-size: 1.6rem;
+    color: var(--accent);
+}
+
+.status {
+    margin: 0;
+    font-size: 0.85rem;
+    color: var(--muted);
+}
+
+.status::before {
+    content: "";
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    margin-right: 6px;
+    border-radius: 50%;
+    background: var(--warn);
+}
+
+.status[data-state="connected"]::before {
+    background: var(--ok);
+}
+
+.label {
+    margin: 0 0 8px;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--muted);
+}
+
+.me {
+    margin-bottom: 24px;
+}
+
+.name {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 600;
+}
+
+.peers {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.peers li {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+    padding: 14px 16px;
+    margin-bottom: 8px;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    font-weight: 600;
+}
+
+.peers .id {
+    font-family: ui-monospace, monospace;
+    font-size: 0.75rem;
+    font-weight: 400;
+    color: var(--muted);
+}
+
+.empty {
+    margin: 0;
+    color: var(--muted);
+}

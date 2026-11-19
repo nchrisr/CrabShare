@@ -12,7 +12,7 @@ Write `CrabShare` where a human reads it and `crabshare` where a machine reads i
 
 ```
 src/main.rs        entry point, router, /ws handler, subnet_key() and its tests
-src/peer.rs        Peer: id, subnet key, outbound channel sender
+src/peer.rs        Peer: id, outbound channel sender
 src/messages.rs    SignalingMessage, the WebSocket wire format
 static/            frontend (plain HTML/CSS/JS), served as the router's fallback
 docs/ROADMAP.md    milestones, in order
