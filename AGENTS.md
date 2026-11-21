@@ -11,9 +11,11 @@ Write `CrabShare` where a human reads it and `crabshare` where a machine reads i
 ### Where things live
 
 ```
-src/main.rs        entry point, router, /ws handler, subnet_key() and its tests
-src/peer.rs        Peer: id, outbound channel sender
-src/messages.rs    SignalingMessage, the WebSocket wire format
+src/main.rs        entry point, router, /ws handler
+src/peer.rs        Peer, the shared PeerMap, remove_peer(), send_to_each()
+src/subnet.rs      subnet_key(): how peers are grouped
+src/device.rs      device type from the ?device= query or the User-Agent
+src/messages.rs    SignalingMessage and DeviceKind, the WebSocket wire format
 static/            frontend (plain HTML/CSS/JS), served as the router's fallback
 docs/ROADMAP.md    milestones, in order
 docs/STATUS.md     maintainer's local notes on current state; gitignored, may not exist
@@ -91,5 +93,5 @@ There is no CI and there are no integration tests. Check `/ws` by hand with two 
 - **Name the target type of a conversion.** Write `Some(x)` or `Ok(x)` rather than `.into()` when wrapping in `Option` or `Result`. In general, avoid `.into()` when the target type isn't visible on the same line.
 - **Struct fields: always write `field: value`,** even when the variable has the same name as the field. Don't use the shorthand. Clippy's `redundant_field_names` lint is turned off in `Cargo.toml` for this.
 - **Imports: one `use` per module path, no nested braces.** For example, `use axum::extract::ws::{WebSocket, WebSocketUpgrade};` rather than one merged `use axum::{...}` tree. Put them in three groups separated by blank lines: `std`, external crates, then `crate`. Stable rustfmt can't enforce either rule, so keep both by hand.
-- **Tests.** Pure functions get unit tests next to them, in the same file's `#[cfg(test)] mod tests`. `subnet_key` is the pattern.
+- **Tests.** Pure functions get unit tests next to them, in the same file's `#[cfg(test)] mod tests`. `subnet_key` in `src/subnet.rs` is the pattern.
 - Before committing, run `cargo fmt` and make sure there are no new `cargo clippy` warnings.

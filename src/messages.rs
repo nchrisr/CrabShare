@@ -1,6 +1,19 @@
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
+/// The kind of device a peer runs on, from a fixed list (never the raw user agent).
+#[derive(Serialize, Deserialize, Debug, Clone, Copy, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum DeviceKind {
+    Iphone,
+    Ipad,
+    Android,
+    Mac,
+    Windows,
+    Linux,
+    Unknown,
+}
+
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(tag = "type", rename_all = "snake_case")]
 pub enum SignalingMessage {
