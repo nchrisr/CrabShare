@@ -74,6 +74,8 @@ Status legend: **settled** — deliberate, change only with a good reason. **fir
 
 **Alternatives.** `std::sync::Mutex` is cheaper and fine as long as the lock is never held across an `.await` (currently true). `DashMap` or `RwLock` if contention ever matters. It won't at this project's scale — don't change this without a reason.
 
+**One lock per step.** A peer is removed and the peers left to tell are read in the same lock block, so every other peer either heard of the leaver and hears it left, or never heard of it. The join path works the same way. From `docs/specs/2026-11-17-peer-left-broadcast.md`.
+
 ---
 
 ## D7. Per-peer `mpsc` channel (capacity 32) as the outbound path — first-pass
@@ -109,6 +111,8 @@ Status legend: **settled** — deliberate, change only with a good reason. **fir
 
 **Why.** SDP and ICE contain local IPs and network topology; content is the user's. The public instance must be trustworthy without the user having to take anyone's word for it.
 
+**Message types in logs** come from `SignalingMessage::type_name()`, never from `{:?}`: `Debug` on `Offer`, `Answer` or `IceCandidate` would print the SDP or candidate. From `docs/specs/2026-11-17-peer-left-broadcast.md`.
+
 ---
 
 ## D10. Shared `crabshare-core` crate, compiled to WebAssembly for the browser — settled
@@ -126,3 +130,27 @@ Status legend: **settled** — deliberate, change only with a good reason. **fir
 **Timing.** The workspace split happens when work on `crabshare-core` starts, after M2. The Wasm build is needed from M6 (file sharing). Nothing changes before then.
 
 **Name.** `crabshare-core` is a working name. A plain `core` would clash with Rust's built-in `core` library and is reserved on crates.io. The crate may get a standalone name before it is published.
+
+---
+
+## D11. Changes are committed straight to `main` - settled
+
+**Decision.** There are no feature branches or pull requests. The owner reviews each change locally and commits it to `main`. Agents never commit or push.
+
+**Why.** One maintainer. A pull request would add a step without adding a reviewer: GitHub doesn't let an author approve their own pull request.
+
+**Rejected.** Branch and pull request per change, with a GitHub ruleset requiring code-owner approval. `.github/CODEOWNERS` is committed so that can be turned on when there are collaborators.
+
+**Consequences.** The review loop's record goes in the maintainer's notes, not a pull request comment. `scripts/systems-touched.sh` and `scripts/hooks-diff.sh` compare against `origin/main`, the last push.
+
+---
+
+## D12. System cards and a review loop - settled
+
+**Decision.** Each part of the app, cut by how it fails, has a card in `docs/systems/` with its files, invariants, tripwires and a setting for how involved the owner is. After a tier 2 or 3 change, `/review-loop` runs a general reviewer and one reviewer per touched card, then a separate fixer, then one recheck. Specs live in `docs/specs/` only while their change is in progress.
+
+**Why.** The author of a change is the worst judge of it. Cutting by failure mode puts the right questions to each change: a log line goes to the privacy card, a new lock to state and timing. Tripwires catch risky code outside a card's own files.
+
+**Rejected.** One general review only: it spreads its attention thin and misses system-specific invariants. Cards by layer (server, frontend): a privacy leak or a race can sit in either.
+
+**Origin.** Built from version 0.2.7 of the coding agents harness (`.harness-version`).

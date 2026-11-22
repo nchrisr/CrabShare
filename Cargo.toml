@@ -18,3 +18,8 @@ uuid = { version = "1.23.0", features = ["serde", "v4"] }
 [lints.clippy]
 # Struct fields are always written `field: value`, even when the names match (see AGENTS.md).
 redundant_field_names = "allow"
+# A panic from client input would end a connection task; `expect` with a reason is the project rule.
+# Allowed in tests through clippy.toml.
+unwrap_used = "deny"
+undocumented_unsafe_blocks = "deny"
+cast_possible_truncation = "warn"

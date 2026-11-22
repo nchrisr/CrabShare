@@ -1,0 +1,8 @@
+# Harness files: changes need the owner's review (see docs/systems/harness-files.md).
+AGENTS.md            @nchrisr
+CLAUDE.md            @nchrisr
+.claude/             @nchrisr
+.harness-version     @nchrisr
+docs/systems/        @nchrisr
+scripts/             @nchrisr
+.github/             @nchrisr

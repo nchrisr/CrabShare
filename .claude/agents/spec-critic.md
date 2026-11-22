@@ -12,10 +12,13 @@ You have no context except what you're given. Before judging, read:
 1. The spec you were pointed to
 2. `AGENTS.md`
 3. `docs/DECISIONS.md`
-4. The code and tests the spec will change, starting with `src/main.rs`, `src/peer.rs` and `src/messages.rs`
+4. The system cards in `docs/systems/` that the spec names
+5. The code and tests the spec will change, starting with `src/main.rs`, `src/peer.rs` and `src/messages.rs`
 
 ## Always check
 
+- **Each named card:** does the plan keep every one of its invariants, and does it answer the card's question?
+- **Repeats:** does this bring back a failure listed under a card's "How it breaks"?
 - **Privacy (D1, D9):** can any file content, text, SDP or ICE payload, file name or size, hash or Merkle root reach the server's storage or logs? Hashes and roots must travel only over the DataChannel (D10).
 - **Identity:** can a client choose or fake its own peer ID, or a `from` field the server forwards unchanged?
 - **Isolation:** can a message reach, or reveal the existence of, a peer in another subnet?

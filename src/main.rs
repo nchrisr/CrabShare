@@ -51,14 +51,16 @@ async fn main() {
         )
         .init();
 
-    let listener = TcpListener::bind(&address).await.unwrap();
+    let listener = TcpListener::bind(&address)
+        .await
+        .expect("server address should be free to bind; is another instance running?");
     tracing::info!("Server running on {}", &address);
     axum::serve(
         listener,
         router.into_make_service_with_connect_info::<SocketAddr>(),
     )
     .await
-    .unwrap();
+    .expect("server should keep running until the process is stopped");
 }
 
 async fn ws_handler(
