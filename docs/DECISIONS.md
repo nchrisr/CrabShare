@@ -139,7 +139,9 @@ Status legend: **settled** — deliberate, change only with a good reason. **fir
 
 **Why.** One maintainer. A pull request would add a step without adding a reviewer: GitHub doesn't let an author approve their own pull request.
 
-**Rejected.** Branch and pull request per change, with a GitHub ruleset requiring code-owner approval. `.github/CODEOWNERS` is committed so that can be turned on when there are collaborators.
+**Rejected.** Branch and pull request per change for the owner.
+
+**Ruleset (2026-11-22).** The `protect_main` ruleset on `main` requires a pull request with one approval and code-owner review (`.github/CODEOWNERS`), and blocks force pushes and deletion. The repository admin role is on its bypass list ("always"), so the owner still commits straight to `main`; everyone else, including any app or token, goes through the owner.
 
 **Consequences.** The review loop's record goes in the maintainer's notes, not a pull request comment. `scripts/systems-touched.sh` and `scripts/hooks-diff.sh` compare against `origin/main`, the last push.
 
@@ -154,3 +156,13 @@ Status legend: **settled** — deliberate, change only with a good reason. **fir
 **Rejected.** One general review only: it spreads its attention thin and misses system-specific invariants. Cards by layer (server, frontend): a privacy leak or a race can sit in either.
 
 **Origin.** Built from version 0.2.7 of the coding agents harness (`.harness-version`).
+
+---
+
+## D13. The landing page is deployed by Cloudflare Pages from `landing/` - first-pass
+
+**Decision.** The Cloudflare Pages project `crabshare-site` is connected to this repository and publishes `landing/` as it is (no build step) on every push to `main`. `crabshare.com` and `www.crabshare.com` point to it. The signaling server isn't deployed yet.
+
+**Why.** The quickest way to have every push to `main` update the public site.
+
+**Rejected, for now.** A GitHub Actions workflow that deploys with a Cloudflare API token limited to Pages. It gives Cloudflare no access to the repository, while the Cloudflare GitHub app asks for write access to code and settings. Planned as the replacement.
