@@ -11,8 +11,7 @@ owns:
   - 'scripts/*'
   - '.harness-version'
   - '.github/*'
-  - 'build.rs'
-  - '*/build.rs'
+  - '*build.rs'
   - '.cargo/*'
 watch:
   - '"hooks"'
@@ -41,7 +40,7 @@ watch:
 - Commits go straight to `main` (D11) and the repo has no approval ruleset, so this card and the owner's review are the protection. `.github/CODEOWNERS` is in place for when a ruleset is added.
 
 ## Checks
-- **Programs:** `scripts/systems-touched.sh` wakes this card for any change to these files. `scripts/hooks-diff.sh` lists every command that runs on its own, before and after, word for word.
+- **Programs:** `scripts/systems-touched.sh` wakes this card for any change to these files. `scripts/hooks-diff.sh` lists every command that runs on its own, before and after, word for word. `scripts/doc-refs-check.py`, run by the Stop hook, fails if an `owns` path here no longer exists.
 - **Reviewer:** for each command in the hooks diff, answer yes or no, and flag every yes to the owner:
   - Does it download anything or reach the network (`curl`, `wget`, an unpinned crate, a URL)?
   - Does it write, move or delete anything outside the project folder (`~`, `/`, another repo, shell profiles)?

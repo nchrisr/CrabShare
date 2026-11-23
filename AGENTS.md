@@ -22,7 +22,7 @@ docs/STATUS.md     maintainer's local notes on current state; gitignored, may no
 docs/DECISIONS.md  design decisions with rationale (D1, D2, …)
 docs/specs/        approved plans for tier 2 and 3 changes in progress, written with /spec
 docs/systems/      one card per system: its files, invariants and tripwires
-scripts/           systems-touched.sh and hooks-diff.sh, used by the review loop
+scripts/           review-loop helpers (systems-touched, hooks-diff, blast-radius, deps-check) and doc-refs-check
 .claude/           commands (/spec, /review-loop), agents, the Stop hook, settings
 .harness-version   the version of the coding agents harness these files were built from
 ```
@@ -64,6 +64,7 @@ Each part of the app, cut by how it fails, has a card in `docs/systems/`. `scrip
 | `peer-grouping` | teach-me |
 | `wire-format` | teach-me |
 | `state-and-timing` | teach-me |
+| `dependencies` | teach-me |
 | `resource-limits` | keep-me-posted |
 | `frontend` | trust |
 
@@ -101,7 +102,7 @@ cargo clippy --all-targets -- -D warnings
 cargo fmt --check
 ```
 
-There is no CI, and the only test outside `src/` is a guard in `tests/` that checks spec file names. The Stop hook (`.claude/hooks/check-on-stop.sh`) runs clippy and the tests at the end of any turn that changed `.rs` or `.toml` files. Check `/ws` by hand with two clients, either two browser tabs or `websocat ws://127.0.0.1:3000/ws`.
+There is no CI, and the only test outside `src/` is a guard in `tests/` that checks spec file names. The Stop hook (`.claude/hooks/check-on-stop.sh`) checks that docs still point at real files (`scripts/doc-refs-check.py`), keeps this file under 250 lines, and runs clippy and the tests with `--locked` at the end of any turn that changed `.rs` or `.toml` files. Check `/ws` by hand with two clients, either two browser tabs or `websocat ws://127.0.0.1:3000/ws`.
 
 ### Hard constraints
 
@@ -139,6 +140,7 @@ There is no CI, and the only test outside `src/` is a guard in `tests/` that che
 
 **Talking to the owner**
 - Explain in small chunks, one idea at a time, in plain language.
+- One screen at most for anything the owner must read to decide. Details go in a file they can open.
 - One question sheet, not a drip: collect every question a step raises and ask them together, each with a recommendation.
 - Outside teach-me, decide and log: make the call, write it down (the spec, the summary or `docs/DECISIONS.md`) and keep going to something the owner can look at.
 - Ask the owner only what is theirs: product, cost, risk appetite, and anything on a teach-me card.

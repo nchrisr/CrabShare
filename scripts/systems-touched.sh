@@ -37,17 +37,19 @@ for card in "$cards_dir"/*.md; do
   [ -n "$involvement" ] || continue
   why=""
 
-  while IFS= read -r pattern; do
-    [ -n "$pattern" ] || continue
-    while IFS= read -r file; do
-      [ -n "$file" ] || continue
+  owned=""
+  while IFS= read -r file; do
+    [ -n "$file" ] || continue
+    while IFS= read -r pattern; do
+      [ -n "$pattern" ] || continue
       # In [[ == ]], * matches across /, so "app/*/actions.ts" covers nested folders too.
       if [[ "$file" == $pattern ]]; then
-        why="owns $file"
-        break 2
+        owned="${owned:+$owned, }$file"
+        break
       fi
-    done <<< "$changed"
-  done < <(read_list owns "$card")
+    done < <(read_list owns "$card")
+  done <<< "$changed"
+  [ -n "$owned" ] && why="owns $owned"
 
   while IFS= read -r pattern; do
     [ -n "$pattern" ] || continue

@@ -11,6 +11,7 @@ One card per system, cut by how it fails. `scripts/systems-touched.sh` reads eac
 | [`wire-format`](wire-format.md) | teach-me | the server and a client stop understanding each other |
 | [`state-and-timing`](state-and-timing.md) | teach-me | two connections at once leave the peer map or an inbox in a bad state |
 | [`resource-limits`](resource-limits.md) | keep-me-posted | one client uses up memory, connections or time meant for everyone |
+| [`dependencies`](dependencies.md) | teach-me | a vulnerable, look-alike or hijacked crate reaches the build |
 | [`frontend`](frontend.md) | trust | the page shows the wrong peers or runs a peer's text as code |
 
 Planned: `content-integrity` (hashing, content IDs, Merkle verification, D10), once `crabshare-core` exists.

@@ -13,7 +13,10 @@
       "Bash(cargo clippy:*)",
       "Bash(cargo fmt --check)",
       "Bash(scripts/systems-touched.sh:*)",
-      "Bash(scripts/hooks-diff.sh:*)"
+      "Bash(scripts/hooks-diff.sh:*)",
+      "Bash(scripts/blast-radius.sh:*)",
+      "Bash(scripts/deps-check.sh:*)",
+      "Bash(python3 scripts/doc-refs-check.py)"
     ]
   },
   "hooks": {
