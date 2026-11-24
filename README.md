@@ -60,6 +60,12 @@ CI runs these on every pull request. The Rust version is pinned in `rust-toolcha
 
 Pull requests go to `develop`. See [`CONTRIBUTING.md`](CONTRIBUTING.md).
 
+## License
+
+Licensed under either of [Apache License, Version 2.0](LICENSE-APACHE) or [MIT license](LICENSE-MIT), at your option.
+
+Unless you explicitly state otherwise, any contribution you intentionally submit for inclusion in CrabShare, as defined in the Apache-2.0 license, is dual licensed as above, without any additional terms or conditions.
+
 ## Project docs
 
 - [`docs/ROADMAP.md`](docs/ROADMAP.md) — milestones and what's next
