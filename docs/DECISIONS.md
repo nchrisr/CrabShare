@@ -159,10 +159,10 @@ Status legend: **settled** — deliberate, change only with a good reason. **fir
 
 ---
 
-## D13. The landing page is deployed by Cloudflare Pages from `landing/` - first-pass
+## D13. The landing page is deployed to Cloudflare Pages by GitHub Actions - settled
 
-**Decision.** The Cloudflare Pages project `crabshare-site` is connected to this repository and publishes `landing/` as it is (no build step) on every push to `main`. `crabshare.com` and `www.crabshare.com` point to it. The signaling server isn't deployed yet.
+**Decision.** `.github/workflows/deploy-landing.yml` publishes `landing/` as it is (no build step) to the Cloudflare Pages Direct Upload project `crabshare-landing` on every push to `main` that changes `landing/`, and on manual dispatch. It authenticates with a Cloudflare API token that has only the Account > Cloudflare Pages > Edit permission, held in the repository secret `CLOUDFLARE_API_TOKEN`. The workflow's own GitHub token is read-only, and the action and `wrangler` are pinned to exact versions. The project's custom domains serve the page. The signaling server isn't deployed yet.
 
-**Why.** The quickest way to have every push to `main` update the public site.
+**Why.** GitHub pushes to Cloudflare, so Cloudflare holds no access to this repository. The token can deploy pages but can't touch DNS, other Cloudflare products or GitHub. Pins mean a new release of the action or `wrangler` reaches the token only after review.
 
-**Rejected, for now.** A GitHub Actions workflow that deploys with a Cloudflare API token limited to Pages. It gives Cloudflare no access to the repository, while the Cloudflare GitHub app asks for write access to code and settings. Planned as the replacement.
+**Rejected.** The Cloudflare GitHub app, connected to a Git-integrated Pages project: Cloudflare pulls from the repository, and the app asks for write access to code and settings. Keeping the Git-integrated project with its builds turned off and deploying into it with `wrangler`: Cloudflare doesn't allow a Git-integrated project to become a Direct Upload one, and its docs don't say that deploys keep working once the app is removed. A `deployments: write` permission so the action records GitHub deployments: not needed. Spec: `docs/specs/2026-11-24_landing-deploy-action.md`.
