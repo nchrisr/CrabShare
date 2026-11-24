@@ -7,6 +7,8 @@
     --accent: #d9502b;
     --ok: #2f8a4c;
     --warn: #b7791f;
+    --signal: #3567a8;
+    --data: #2f8a4c;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -19,6 +21,8 @@
         --accent: #f0714a;
         --ok: #5cc27d;
         --warn: #e0a84a;
+        --signal: #7aa7e6;
+        --data: #5cc27d;
     }
 }
 
@@ -40,18 +44,51 @@ main {
     padding: 32px 16px;
 }
 
+section {
+    margin-bottom: 28px;
+}
+
 header {
     display: flex;
     align-items: baseline;
     justify-content: space-between;
     gap: 12px;
-    margin-bottom: 24px;
+    margin-bottom: 20px;
 }
 
 h1 {
     margin: 0;
     font-size: 1.6rem;
     color: var(--accent);
+}
+
+h3 {
+    margin: 0;
+    font-size: 0.95rem;
+}
+
+code {
+    font-family: ui-monospace, monospace;
+    font-size: 0.85em;
+    overflow-wrap: anywhere;
+}
+
+.icon-defs {
+    position: absolute;
+    width: 0;
+    height: 0;
+    overflow: hidden;
+}
+
+.icon {
+    width: 22px;
+    height: 22px;
+    flex: none;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.6;
+    stroke-linecap: round;
+    stroke-linejoin: round;
 }
 
 .status {
@@ -77,20 +114,279 @@ h1 {
 .label {
     margin: 0 0 8px;
     font-size: 0.8rem;
+    font-weight: 400;
     text-transform: uppercase;
     letter-spacing: 0.05em;
     color: var(--muted);
 }
 
-.me {
-    margin-bottom: 24px;
+.muted {
+    color: var(--muted);
 }
 
-.name {
-    margin: 0;
-    font-size: 1.25rem;
-    font-weight: 600;
+/* The ring stage */
+
+.stage {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    overflow: hidden;
 }
+
+.wires,
+.nodes {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.wires {
+    overflow: visible;
+}
+
+.wires .ring {
+    fill: color-mix(in srgb, var(--data) 5%, transparent);
+    stroke: var(--line);
+    stroke-width: 0.5;
+}
+
+.wires .lane {
+    fill: none;
+    stroke: var(--signal);
+    stroke-opacity: 0.25;
+    stroke-width: 0.5;
+    stroke-dasharray: 1.5 1.5;
+}
+
+.wires .trail {
+    fill: none;
+    stroke-width: 0.6;
+    stroke-opacity: 0.35;
+}
+
+.wires .trail.signal {
+    stroke: var(--signal);
+}
+
+.wires .trail.data {
+    stroke: var(--data);
+}
+
+.wires .trail.flash {
+    stroke-opacity: 0.9;
+    animation: flash 650ms ease-out forwards;
+}
+
+.wires .packet.signal {
+    fill: var(--signal);
+}
+
+.wires .packet.data {
+    fill: var(--data);
+}
+
+.wires .chord {
+    fill: none;
+    stroke: var(--data);
+    stroke-width: 0.7;
+    stroke-opacity: 0.6;
+}
+
+.wires .progress {
+    fill: var(--data);
+    font-size: 3px;
+    font-weight: 600;
+    text-anchor: middle;
+}
+
+.node {
+    position: absolute;
+    width: 42px;
+    height: 42px;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    place-items: center;
+    transform: translate(-50%, -50%);
+    border: 1.5px solid var(--line);
+    border-radius: 50%;
+    background: var(--card);
+    color: var(--text);
+    font: inherit;
+    transition:
+        left 400ms ease,
+        top 400ms ease,
+        opacity 600ms ease,
+        border-color 200ms ease;
+}
+
+button.node {
+    cursor: pointer;
+}
+
+button.node:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+}
+
+.node.me {
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
+.node.server {
+    width: 46px;
+    height: 46px;
+    border-radius: 12px;
+    border-color: var(--signal);
+    color: var(--signal);
+}
+
+.node.server.offline {
+    opacity: 0.4;
+}
+
+.node.selected {
+    border-color: var(--data);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--data) 25%, transparent);
+}
+
+.node.entering,
+.node.leaving {
+    opacity: 0;
+}
+
+.node.pulse {
+    animation: pulse 500ms ease-out;
+}
+
+.node-label {
+    position: absolute;
+    top: calc(100% + 3px);
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: max-content;
+    max-width: 92px;
+    pointer-events: none;
+    line-height: 1.2;
+}
+
+.node.server .node-label {
+    top: 50%;
+    left: calc(100% + 6px);
+    transform: translateY(-50%);
+    align-items: flex-start;
+    max-width: 140px;
+}
+
+.node-name,
+.node-sub,
+.peer-name {
+    max-width: 100%;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    unicode-bidi: isolate;
+}
+
+.node-name {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--text);
+}
+
+.node-sub {
+    font-size: 0.65rem;
+    color: var(--muted);
+}
+
+.stage.crowded .node-label {
+    display: none;
+}
+
+.legend {
+    list-style: none;
+    margin: 10px 0 0;
+    padding: 0;
+    font-size: 0.8rem;
+    color: var(--muted);
+}
+
+.swatch {
+    display: inline-block;
+    flex: none;
+    width: 10px;
+    height: 10px;
+    margin-right: 8px;
+    border-radius: 50%;
+}
+
+.swatch.signal {
+    background: var(--signal);
+}
+
+.swatch.data {
+    background: var(--data);
+}
+
+/* How this connection works */
+
+.panel .layer {
+    padding: 14px 16px;
+    margin-bottom: 8px;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+}
+
+.panel .layer p {
+    margin: 6px 0 0;
+    font-size: 0.85rem;
+}
+
+.layer-head {
+    display: flex;
+    align-items: center;
+    gap: 0;
+}
+
+.layer-head h3 {
+    flex: 1;
+}
+
+.pill {
+    font-size: 0.72rem;
+    padding: 2px 8px;
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    color: var(--muted);
+    white-space: nowrap;
+}
+
+.pill[data-state="connected"] {
+    color: var(--ok);
+    border-color: var(--ok);
+}
+
+.pill[data-state="connecting"] {
+    color: var(--warn);
+    border-color: var(--warn);
+}
+
+.fine {
+    margin: 0;
+    font-size: 0.75rem;
+    color: var(--muted);
+}
+
+/* Devices list */
 
 .peers {
     list-style: none;
@@ -100,25 +396,102 @@ h1 {
 
 .peers li {
     display: flex;
-    justify-content: space-between;
-    align-items: baseline;
+    align-items: center;
     gap: 12px;
-    padding: 14px 16px;
+    padding: 12px 16px;
     margin-bottom: 8px;
     background: var(--card);
     border: 1px solid var(--line);
     border-radius: 12px;
+}
+
+.peers li.selected {
+    border-color: var(--data);
+}
+
+.peer-text {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-width: 0;
+}
+
+.peer-name {
     font-weight: 600;
+}
+
+.peer-detail {
+    font-size: 0.8rem;
+    color: var(--muted);
 }
 
 .peers .id {
     font-family: ui-monospace, monospace;
     font-size: 0.75rem;
-    font-weight: 400;
     color: var(--muted);
 }
 
 .empty {
     margin: 0;
     color: var(--muted);
+}
+
+/* Activity feed */
+
+.feed {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    font-size: 0.8rem;
+}
+
+.feed li {
+    display: flex;
+    gap: 10px;
+    padding: 4px 0;
+    border-bottom: 1px solid var(--line);
+    min-width: 0;
+}
+
+.feed time {
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+}
+
+.feed span {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    unicode-bidi: isolate;
+}
+
+@keyframes pulse {
+    0% {
+        box-shadow: 0 0 0 0 color-mix(in srgb, currentColor 45%, transparent);
+    }
+    100% {
+        box-shadow: 0 0 0 12px transparent;
+    }
+}
+
+@keyframes flash {
+    to {
+        stroke-opacity: 0;
+    }
+}
+
+@media (max-width: 360px) {
+    .node-label {
+        display: none;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .node {
+        transition: none;
+    }
+
+    .node.pulse {
+        animation: none;
+    }
 }
