@@ -2,7 +2,7 @@
 
 **Tier:** 3. It isn't one of the six listed items, but it rewrites a settled decision (D11), changes who can get code into the repository, and adds a workflow that runs code from outside pull requests on GitHub's machines. When unsure, the higher tier.
 **Systems:** `harness-files` (teach-me): `.github/`, `scripts/`, `.claude/` and `AGENTS.md` all change.
-**Why:** The project expects pull requests from outside contributors. Today every change goes straight to `main` (D11), and every push to `main` that touches `landing/` deploys the public site (D13). An outside change would have no automatic checks, and nothing separates "merged" from "live". GitHub's default branch is already `develop`, but `develop` is two commits behind `main` and nothing uses it.
+**Why:** The project expects pull requests from outside contributors. Today every change goes straight to `main` (D11), and every push to `main` that touches `landing/` deploys the public site (D13). An outside change would have no automatic checks, and nothing separates "merged" from "live". GitHub's default branch is already `develop`, but `develop` is four commits behind `main` and nothing uses it.
 
 ## Decisions
 
@@ -18,7 +18,7 @@
 
 ### 3. Rulesets: review rules the owner can bypass, history and check rules nobody can
 - **Today:** `protect_main` targets `~DEFAULT_BRANCH` and `refs/heads/main`. Since the default branch became `develop`, it already covers `develop` too. Its admin bypass is "always", and a bypass skips every rule in its ruleset, including "no force push" and "no deletion".
-- **Chosen:** three rulesets.
+- **Chosen:** four rulesets.
   - `protect_main`: target `refs/heads/main` only. "Restrict updates", so only the bypass list can change `main` at all: no outside pull request can be merged into it, even if approved. It keeps its pull-request rule (one approval, code-owner review, the extra approval for unattributed changes) as a second layer. Admin bypass "always".
   - `protect_develop` (new): target `refs/heads/develop`. The same pull-request settings as `protect_main`, plus: dismiss stale approvals on a new push, require approval of the most recent push, merge method squash only, and the `checks` status check required, with its source set to the GitHub Actions app, and the branch up to date with `develop`. Admin bypass "always".
   - `branch_history` (new): target `refs/heads/main` and `refs/heads/develop`. No deletion, no force push. No bypass actors.
@@ -49,7 +49,7 @@
 - **Still uncertain:** tags or version numbers for releases aren't needed until the server is published (M8).
 
 ### 6. `develop` catches up with `main` by a fast-forward
-- **Today:** `origin/develop` is at `8ce8af8`, an ancestor of `origin/main` (`677c0eb`), two commits behind and none ahead. The landing deploy change (D13's workflow) isn't committed yet.
+- **Today:** `origin/develop` is at `8ce8af8`, an ancestor of `origin/main` (`77c8f00`), four commits behind and none ahead. The landing deploy change (D13's workflow) is on `main`.
 - **Chosen:** land the landing deploy on `main` first, as D11 still allows, including retiring the old Git-connected Pages project and the Cloudflare GitHub app. Otherwise Pages would keep building previews of `develop`, and merged outside changes would be public at a preview address. Then fast-forward `develop` to `main`. No merge commit is needed, and from then on work starts from `develop`.
 - **Still uncertain:** nothing.
 
@@ -83,6 +83,8 @@
 - **`.claude/commands/review-loop.md`:** the base is the merge base with `origin/HEAD` unless told otherwise; the "no branch or PR" sentence goes.
 - **`.claude/agents/reviewer.md`:** "usually `origin/main`" becomes "usually the merge base with `origin/HEAD`".
 - **`docs/systems/harness-files.md`:** the new tripwires and split invariant from decision 8; the rule that a green check on a check-related pull request counts only after its diff is read; and the "How it breaks" line about no ruleset replaced by the ruleset setup.
+- **`.gitignore`:** `.DS_Store` is ignored in every folder, not just the top one (the owner's request during review).
+- **`.claude/hooks/check-on-stop.sh`, `.claude/hooks/format-on-edit.sh`:** set `RUSTUP_AUTO_INSTALL=0`, so a hook never downloads the pinned Rust. If it isn't installed, the Stop hook skips clippy and the tests and tells the developer to run `rustup toolchain install` (the owner's decision during review).
 - **`CONTRIBUTING.md`** (new): target `develop`, the checks to run, `main` is releases only.
 - **`README.md`:** "Development" lists the exact commands CI runs (`cargo fmt --check`, `cargo clippy --locked --all-targets -- -D warnings`, `cargo test --locked`) and says CI runs them on every pull request; "Project docs" links `CONTRIBUTING.md`. The rest is checked against the repo as it is when built, and anything out of date is fixed.
 

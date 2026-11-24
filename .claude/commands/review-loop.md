@@ -3,7 +3,7 @@ description: Review a finished tier 2 or 3 change with a general reviewer, one s
 argument-hint: <spec path, if not obvious>
 ---
 
-Run the review loop for the uncommitted change (and any commits not yet pushed). Spec: $ARGUMENTS
+Run the review loop for the change since this branch left the default branch, committed or not. Spec: $ARGUMENTS
 
 Tier 2 and 3 only. Tier 1 changes skip this. Run it after the change is built and its checks pass, and before the demo and the commit. The base is the commit where this branch left the default branch, `git merge-base origin/HEAD HEAD`, unless told otherwise (D11).
 

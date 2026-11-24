@@ -15,6 +15,7 @@ Run the same checks CI runs:
 cargo fmt --check
 cargo clippy --locked --all-targets -- -D warnings
 cargo test --locked
+python3 scripts/doc-refs-check.py
 ```
 
 The Rust version is pinned in `rust-toolchain.toml`; `rustup` installs it the first time you run `cargo`. `--locked` means `Cargo.lock` must not change. If your change adds or upgrades a crate, say why in the pull request.

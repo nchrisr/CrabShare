@@ -145,7 +145,7 @@ Status legend: **settled** — deliberate, change only with a good reason. **fir
 
 **Rulesets.** A repository admin bypass skips every rule in its ruleset, so rules that must hold for the owner too sit in rulesets with no bypass.
 - `protect_develop` (`develop`): a pull request with one approval and code-owner review (`.github/CODEOWNERS`), the extra approval for unattributed changes, stale approvals dismissed on a new push, approval of the most recent push, squash merges only, and the `checks` status from GitHub Actions on an up-to-date branch. Admin bypass "always".
-- `protect_main` (`main`): restrict updates, so only the bypass list can change `main` and no outside pull request can be merged into it; a pull request with one approval and code-owner review; merge commits only. Admin bypass "always".
+- `protect_main` (`main`): restrict updates, so only the bypass list can change `main` and no outside pull request can be merged into it; a pull request with one approval and code-owner review, and the extra approval for unattributed changes; merge commits only. Admin bypass "always".
 - `branch_history` (`develop` and `main`): no deletion, no force push. No bypass.
 - `release_checks` (`main`): the `checks` status from GitHub Actions. No bypass.
 
@@ -176,5 +176,7 @@ Status legend: **settled** — deliberate, change only with a good reason. **fir
 **Why.** GitHub pushes to Cloudflare, so Cloudflare holds no access to this repository. The token can deploy pages but can't touch DNS, other Cloudflare products or GitHub. Pins mean a new release of the action or of `wrangler` itself reaches the token only after review. `wrangler`'s own npm dependencies still resolve at run time with no lockfile, so the token's Pages-only scope is what limits them.
 
 **Rejected.** The Cloudflare GitHub app, connected to a Git-integrated Pages project: Cloudflare pulls from the repository, and the app asks for write access to code and settings. Keeping the Git-integrated project with its builds turned off and deploying into it with `wrangler`: Cloudflare doesn't allow a Git-integrated project to become a Direct Upload one, and its docs don't say that deploys keep working once the app is removed. A `deployments: write` permission so the action records GitHub deployments: not needed. Spec: `docs/specs/2026-11-24_landing-deploy-action.md`.
+
+**Releases.** A change reaches `main` only through a checked release pull request from `develop` (D11), so only a release deploys. Spec: `docs/specs/2026-11-24_develop-branch-flow.md`.
 
 **Revisit.** When anyone besides the owner can merge to `main`, add required reviewers to the `production` environment, so each deploy waits for the owner's approval.

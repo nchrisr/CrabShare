@@ -46,6 +46,14 @@ if ! printf '%s\n' "$changed" | grep -qE '\.(rs|toml)$'; then
   exit 0
 fi
 
+# rust-toolchain.toml pins the Rust version, and rustup would download a missing one on its own. A
+# hook never downloads, so when the pinned version isn't installed, skip and tell the developer.
+export RUSTUP_AUTO_INSTALL=0
+if ! rustc --version >/dev/null 2>&1; then
+  printf '{"systemMessage": "Skipped clippy and tests: the Rust version pinned in rust-toolchain.toml is not installed. Run: rustup toolchain install"}\n'
+  exit 0
+fi
+
 if ! output=$(cargo clippy --locked --all-targets --quiet -- -D warnings 2>&1); then
   printf 'Clippy failed. Fix this before finishing:\n%s\n' "$output" | tail -60 >&2
   exit 2
