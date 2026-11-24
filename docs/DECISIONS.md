@@ -180,3 +180,13 @@ Status legend: **settled** — deliberate, change only with a good reason. **fir
 **Releases.** A change reaches `main` only through a checked release pull request from `develop` (D11), so only a release deploys. Spec: `docs/specs/2026-11-24_develop-branch-flow.md`.
 
 **Revisit.** When anyone besides the owner can merge to `main`, add required reviewers to the `production` environment, so each deploy waits for the owner's approval.
+
+---
+
+## D14. Dual licensed under MIT or Apache-2.0 - settled
+
+**Decision.** CrabShare is licensed under `MIT OR Apache-2.0`, at the user's option: `LICENSE-MIT` and `LICENSE-APACHE` at the root, and the `license` field in `Cargo.toml`. Contributions come in under the same terms, as the README says.
+
+**Why.** It is the Rust ecosystem's convention, so the code, and later the `crabshare-core` crate (D10), can be reused anywhere Rust crates are. Apache-2.0 adds an explicit patent grant from contributors, which matters for the hashing, Merkle and pairing work. MIT keeps compatibility with GPLv2 projects, which Apache-2.0 alone lacks.
+
+**Rejected.** MIT alone: no patent grant. Apache-2.0 alone: incompatible with GPLv2. A copyleft license (GPL, AGPL): it would require shared changes to stay open, but it narrows who can reuse the code and goes against the ecosystem's norm.
