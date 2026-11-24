@@ -41,15 +41,12 @@
             <section class="network" aria-labelledby="network-title">
                 <h2 id="network-title" class="label">Your network, live</h2>
                 <div id="stage" class="stage">
-                    <svg id="wires" class="wires" viewBox="0 0 100 100" aria-hidden="true">
-                        <circle class="lane" cx="50" cy="56" r="40"/>
-                        <circle class="ring" cx="50" cy="56" r="30"/>
-                        <path class="lane" d="M50 16V10"/>
-                    </svg>
+                    <!-- The ring and lane are drawn by app.js from its geometry constants. -->
+                    <svg id="wires" class="wires" viewBox="0 0 100 100" aria-hidden="true"></svg>
                     <div id="nodes" class="nodes"></div>
                 </div>
                 <ul class="legend">
-                    <li><span class="swatch signal"></span>Signaling: outside your network, through the server</li>
+                    <li><span class="swatch signal"></span>Signaling: through the CrabShare server</li>
                     <li><span class="swatch data"></span>Content: directly between devices</li>
                 </ul>
             </section>
@@ -66,13 +63,14 @@
                     <p>A WebSocket to this server: <code id="signal-endpoint">…</code></p>
                     <p id="signal-security" class="muted"></p>
                     <p class="muted">The server only introduces devices to each other. It never sees what you share.</p>
+                    <p class="muted">Packets to other devices are drawn from what the server always does; this tab only sees its own messages.</p>
                 </div>
 
                 <div class="layer">
                     <div class="layer-head">
                         <span class="swatch data"></span>
                         <h3>2. Content</h3>
-                        <span id="content-state" class="pill" data-state="pending">Coming soon</span>
+                        <span id="content-state" class="pill" data-state="pending">Not built yet</span>
                     </div>
                     <p>A WebRTC DataChannel, directly between two devices, encrypted with DTLS.</p>
                     <p id="content-peer" class="muted"></p>
@@ -81,13 +79,13 @@
                 <p id="secure-context" class="fine"></p>
             </section>
 
-            <section aria-labelledby="peers-title">
+            <section class="devices" aria-labelledby="peers-title">
                 <h2 id="peers-title" class="label">Devices</h2>
                 <ul id="peers" class="peers"></ul>
                 <p id="empty" class="empty">No other devices yet. Open this page on another device on the same Wi-Fi.</p>
             </section>
 
-            <section aria-labelledby="feed-title">
+            <section class="activity" aria-labelledby="feed-title">
                 <h2 id="feed-title" class="label">Activity</h2>
                 <ol id="feed" class="feed"></ol>
             </section>

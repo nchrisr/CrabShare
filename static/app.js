@@ -31,14 +31,17 @@ const DEVICE_TABLE = {
 // lane around it is the signaling path, which reaches the server at the top.
 const CENTER_X = 50;
 const CENTER_Y = 56;
-const RING_RADIUS = 30;
+// 28 keeps the "You" node's two-line label inside the stage down to 360 px
+// wide, where labels hide.
+const RING_RADIUS = 28;
 const LANE_RADIUS = 40;
 const SERVER = { x: 50, y: 7 };
 const LANE_TOP = { x: 50, y: CENTER_Y - LANE_RADIUS };
 
 const CROWDED_AT = 13;
 const MAX_PACKETS = 40;
-const LEG_MS = 650;
+const MAX_FLASHES = 40;
+const LEG_MS = 1100;
 const FEED_LIMIT = 20;
 const SVG_NS = "http://www.w3.org/2000/svg";
 
@@ -65,6 +68,7 @@ let peers = new Map();
 let selectedPeer = null;
 let positions = new Map();
 let activePackets = 0;
+let activeFlashes = 0;
 let retryDelayMs = 1000;
 
 // Node elements on the ring, by peer ID, plus "server".
@@ -84,19 +88,33 @@ function nameFor(id) {
     return `${adjective} ${animal}`;
 }
 
+// The table entry for a device kind, or null. hasOwn keeps inherited keys
+// such as "constructor" from counting as entries.
+function deviceEntry(device) {
+    return Object.hasOwn(DEVICE_TABLE, device) ? DEVICE_TABLE[device] : null;
+}
+
 function iconFor(device) {
-    const entry = DEVICE_TABLE[device];
+    const entry = deviceEntry(device);
     return entry ? entry.icon : "unknown";
 }
 
 function deviceLabel(device) {
-    const entry = DEVICE_TABLE[device];
+    const entry = deviceEntry(device);
     return entry ? entry.label : "Unknown device";
 }
 
 // A string field from a message, or null if it is missing or not a string.
 function stringOrNull(value) {
     return typeof value === "string" ? value : null;
+}
+
+// A name from a message, or null if it is missing or blank, so a blank name
+// falls back to the generated one everywhere.
+function nameOrNull(value) {
+    if (typeof value !== "string") return null;
+    const trimmed = value.trim();
+    return trimmed === "" ? null : trimmed;
 }
 
 // This browser's own guess at its device kind. Used only for this device's
@@ -247,8 +265,11 @@ function makePeerNode(id) {
             render();
         });
     }
-    // Let the fade-in start from the "entering" style.
-    requestAnimationFrame(() => node.classList.remove("entering"));
+    // Two frames: the first gives the new node a computed "entering" style,
+    // so removing the class in the second starts the fade-in transition.
+    requestAnimationFrame(() => {
+        requestAnimationFrame(() => node.classList.remove("entering"));
+    });
     return node;
 }
 
@@ -297,37 +318,48 @@ function renderRing() {
         node.disabled = true;
         setTimeout(() => node.remove(), 700);
     }
+
+    redrawStreams();
 }
 
 // ---------------------------------------------------------------------------
 // Lists and panel
 
+function makeListItem(id) {
+    const isMe = id === myId;
+    const device = deviceOf(id);
+    const item = document.createElement("li");
+    item.classList.toggle("selected", selectedPeer === id);
+    item.append(makeIcon(iconFor(device)));
+
+    const text = document.createElement("span");
+    text.className = "peer-text";
+    const name = document.createElement("span");
+    name.className = "peer-name";
+    name.textContent = displayName(id);
+    const detail = document.createElement("span");
+    detail.className = "peer-detail";
+    const typed = isMe ? myName : peers.get(id)?.name;
+    let detailText = deviceLabel(device);
+    if (typed) detailText += ` · ${nameFor(id)}`;
+    if (isMe) detailText += " · this device";
+    detail.textContent = detailText;
+    text.append(name, detail);
+
+    const shortId = document.createElement("span");
+    shortId.className = "id";
+    shortId.textContent = id.slice(0, 8);
+    item.append(text, shortId);
+    return item;
+}
+
+// This device first, so its name is on screen even when ring labels are
+// hidden (narrow screens, crowded ring); then the others by ID.
 function renderList() {
     peersEl.replaceChildren();
+    if (myId) peersEl.append(makeListItem(myId));
     for (const id of [...peers.keys()].sort()) {
-        const device = deviceOf(id);
-        const item = document.createElement("li");
-        item.classList.toggle("selected", selectedPeer === id);
-        item.append(makeIcon(iconFor(device)));
-
-        const text = document.createElement("span");
-        text.className = "peer-text";
-        const name = document.createElement("span");
-        name.className = "peer-name";
-        name.textContent = displayName(id);
-        const detail = document.createElement("span");
-        detail.className = "peer-detail";
-        const typed = peers.get(id)?.name;
-        detail.textContent = typed
-            ? `${deviceLabel(device)} · ${nameFor(id)}`
-            : deviceLabel(device);
-        text.append(name, detail);
-
-        const shortId = document.createElement("span");
-        shortId.className = "id";
-        shortId.textContent = id.slice(0, 8);
-        item.append(text, shortId);
-        peersEl.append(item);
+        peersEl.append(makeListItem(id));
     }
     emptyEl.hidden = peers.size > 0;
 }
@@ -393,20 +425,45 @@ function addPath(d, className) {
     return path;
 }
 
+function addCircle(radius, className) {
+    const circle = document.createElementNS(SVG_NS, "circle");
+    circle.setAttribute("cx", CENTER_X);
+    circle.setAttribute("cy", CENTER_Y);
+    circle.setAttribute("r", radius);
+    circle.setAttribute("class", className);
+    wiresEl.append(circle);
+}
+
+// The fixed backdrop: the lane, the ring, and the stub from the lane up to
+// the server. Drawn from the same constants nodes and packets use, so they
+// always line up. The server node covers the stub's top end.
+function drawBackdrop() {
+    addCircle(LANE_RADIUS, "lane");
+    addCircle(RING_RADIUS, "ring");
+    addPath(`M${LANE_TOP.x} ${LANE_TOP.y} L${SERVER.x} ${SERVER.y}`, "lane");
+}
+
 // Moves one dot along a path. Resolves when it arrives. With reduced motion,
-// or when the stage is already busy, the path flashes instead.
+// or when the stage is already busy, the path flashes instead. Past
+// MAX_FLASHES the leg is dropped, so a burst can't flood the stage.
 function sendPacket(d, kind, reverse) {
     return new Promise((resolve) => {
-        const path = addPath(d, `trail ${kind}`);
         if (reducedMotion.matches || activePackets >= MAX_PACKETS) {
-            path.classList.add("flash");
+            if (activeFlashes >= MAX_FLASHES) {
+                resolve();
+                return;
+            }
+            activeFlashes += 1;
+            const path = addPath(d, `trail ${kind} flash`);
             setTimeout(() => {
                 path.remove();
+                activeFlashes -= 1;
                 resolve();
             }, LEG_MS);
             return;
         }
 
+        const path = addPath(d, `trail ${kind}`);
         activePackets += 1;
         const dot = document.createElementNS(SVG_NS, "circle");
         dot.setAttribute("r", "1.6");
@@ -464,6 +521,35 @@ function showSignal(event) {
     });
 }
 
+function closeStream(key, stream) {
+    clearTimeout(stream.timer);
+    stream.chord.remove();
+    stream.text.remove();
+    // A newer stream may have taken the key since this one's timer was set.
+    if (dataStreams.get(key) === stream) dataStreams.delete(key);
+}
+
+// Puts a stream's chord and text where its two peers are now.
+function placeStream(stream, from, to) {
+    stream.chord.setAttribute("d", chordPath(from, to));
+    stream.text.setAttribute("x", (from.x + to.x) / 2);
+    stream.text.setAttribute("y", (from.y + to.y) / 2 - 2);
+}
+
+// Called after every ring layout: follow moved peers, drop streams whose
+// peers are gone (a leave, or the socket closing).
+function redrawStreams() {
+    for (const [key, stream] of dataStreams) {
+        const from = positions.get(stream.fromId);
+        const to = positions.get(stream.toId);
+        if (from && to) {
+            placeStream(stream, from, to);
+        } else {
+            closeStream(key, stream);
+        }
+    }
+}
+
 function showData(event) {
     const from = positions.get(event.from);
     const to = positions.get(event.to);
@@ -475,26 +561,23 @@ function showData(event) {
         const chord = addPath(chordPath(from, to), "chord");
         const text = document.createElementNS(SVG_NS, "text");
         text.setAttribute("class", "progress");
-        text.setAttribute("x", (from.x + to.x) / 2);
-        text.setAttribute("y", (from.y + to.y) / 2 - 2);
         wiresEl.append(text);
-        stream = { chord: chord, text: text, timer: null };
+        stream = { fromId: event.from, toId: event.to, chord: chord, text: text, timer: null };
         dataStreams.set(key, stream);
     }
+    placeStream(stream, from, to);
 
     const progress = typeof event.progress === "number" ? event.progress : null;
-    stream.text.textContent =
+    const percent =
         progress === null ? "" : `${Math.round(Math.min(Math.max(progress, 0), 1) * 100)}%`;
+    const label = stringOrNull(event.label) ?? "";
+    stream.text.textContent = [label, percent].filter((part) => part !== "").join(" ");
     sendPacket(chordPath(from, to), "data", false);
 
     // Close the stream when it finishes, or when updates stop arriving.
     clearTimeout(stream.timer);
     const idleMs = progress !== null && progress >= 1 ? 1500 : 4000;
-    stream.timer = setTimeout(() => {
-        stream.chord.remove();
-        stream.text.remove();
-        dataStreams.delete(key);
-    }, idleMs);
+    stream.timer = setTimeout(() => closeStream(key, stream), idleMs);
 }
 
 // The one entry point for everything that moves on the stage.
@@ -527,7 +610,7 @@ function handle(message) {
                     const entry = peers.get(detail?.peer_id);
                     if (!entry) continue;
                     entry.device = stringOrNull(detail.device);
-                    entry.name = stringOrNull(detail.name);
+                    entry.name = nameOrNull(detail.name);
                 }
             }
             render();
@@ -539,7 +622,7 @@ function handle(message) {
             if (typeof message.peer_id !== "string") return;
             peers.set(message.peer_id, {
                 device: stringOrNull(message.device),
-                name: stringOrNull(message.name),
+                name: nameOrNull(message.name),
             });
             render();
             addFeed("peer_joined", message.peer_id);
@@ -558,18 +641,21 @@ function handle(message) {
             if (!peers.has(message.peer_id)) return;
             addFeed("peer_left", message.peer_id);
             peers.delete(message.peer_id);
-            render();
+            // Packets go out while the ring still has its old layout; the
+            // node fades once they arrive. State is already updated, so any
+            // render in between shows the leave too.
             showTraffic({
                 kind: "signal",
                 type: "peer_left",
                 from: "server",
                 to: [myId, ...peers.keys()],
             });
+            setTimeout(render, LEG_MS);
             return;
         }
         case "peer_updated": {
             if (typeof message.peer_id !== "string") return;
-            const name = stringOrNull(message.name);
+            const name = nameOrNull(message.name);
             if (message.peer_id === myId) {
                 myName = name;
             } else if (peers.has(message.peer_id)) {
@@ -621,5 +707,6 @@ function connect() {
     });
 }
 
+drawBackdrop();
 render();
 connect();

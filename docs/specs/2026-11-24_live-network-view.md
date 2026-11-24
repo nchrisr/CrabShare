@@ -35,7 +35,7 @@
 
 ### 5. What a join and a leave look like
 
-- **Chosen:** `peer_joined`: the new node fades in, a packet goes from it to the server, then the server sends one packet to each other peer. `welcome`: one packet from the server to you, then the ring fills in. `peer_left`: one packet from the server to each remaining peer, then the node fades out. Each tab can only see its own messages, so the fan-out to other peers is drawn from what the server is known to do (D7: presence goes to the whole subnet), and the panel says so.
+- **Chosen:** `peer_joined`: the new node fades in, a packet goes from it to the server, then the server sends one packet to each other peer. `welcome`: the ring fills in, then one packet goes from the server to you (the packet needs your place on the ring). `peer_left`: one packet from the server to each remaining peer, then the node fades out. Each tab can only see its own messages, so the fan-out to other peers is drawn from what the server is known to do (D7: presence goes to the whole subnet), and the panel says so.
 - **Still uncertain:** nothing.
 
 ### 6. No demo mode
@@ -85,7 +85,7 @@ The only card is frontend (trust), so this is for the demo rather than a briefin
 - `layoutRing(ids) -> Map<id, { x, y }>`: positions as fractions of the stage, you at the bottom, others by sorted ID. Pure function.
 - `iconFor(device) -> "phone" | "tablet" | "computer" | "unknown"`: the fixed table. Pure function.
 - `render()`: rebuilds nodes, list and panel from state with DOM calls only.
-- `showTraffic(event)`: the single entry point for animations (decision 4); queues so a burst doesn't flood the stage.
+- `showTraffic(event)`: the single entry point for animations (decision 4); caps moving packets, then highlights paths instead, then drops legs past a second cap, so a burst doesn't flood the stage.
 - `describeCandidateType(type) -> string`: plain-words table for decision 8, ready for M4.
 
 `static/style.css`

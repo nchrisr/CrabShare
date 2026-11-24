@@ -178,7 +178,7 @@ code {
 
 .wires .trail.flash {
     stroke-opacity: 0.9;
-    animation: flash 650ms ease-out forwards;
+    animation: flash 1100ms ease-out forwards;
 }
 
 .wires .packet.signal {
@@ -201,6 +201,11 @@ code {
     font-size: 3px;
     font-weight: 600;
     text-anchor: middle;
+    /* A halo in the card colour so the chord passes behind the text. */
+    paint-order: stroke;
+    stroke: var(--card);
+    stroke-width: 1.2px;
+    stroke-linejoin: round;
 }
 
 .node {
@@ -274,6 +279,10 @@ button.node:focus-visible {
     align-items: center;
     width: max-content;
     max-width: 92px;
+    padding: 1px 5px;
+    border-radius: 6px;
+    /* Backing so lines drawn under the node pass behind the text. */
+    background: color-mix(in srgb, var(--card) 85%, transparent);
     pointer-events: none;
     line-height: 1.2;
 }
@@ -477,6 +486,49 @@ button.node:focus-visible {
 @keyframes flash {
     to {
         stroke-opacity: 0;
+    }
+}
+
+/* Tablets and landscape phones: still one column, with a larger ring. */
+@media (min-width: 600px) {
+    main {
+        max-width: 600px;
+    }
+}
+
+/* Wide screens: the ring on the left, kept in view while scrolling;
+   the panel, devices and activity in a column on the right. */
+@media (min-width: 900px) {
+    main {
+        max-width: 1120px;
+        padding: 40px 32px;
+        display: grid;
+        grid-template-columns: minmax(0, 1.2fr) minmax(320px, 1fr);
+        column-gap: 40px;
+        align-items: start;
+    }
+
+    header {
+        grid-column: 1 / -1;
+    }
+
+    .network {
+        grid-column: 1;
+        grid-row: 2 / span 3;
+        position: sticky;
+        top: 24px;
+    }
+
+    .panel,
+    .devices,
+    .activity {
+        grid-column: 2;
+    }
+
+    /* Keep the whole square ring on screen on short, wide windows. */
+    .stage {
+        max-width: min(100%, calc(100vh - 140px));
+        margin: 0 auto;
     }
 }
 
