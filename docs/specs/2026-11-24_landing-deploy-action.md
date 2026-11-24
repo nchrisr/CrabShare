@@ -24,11 +24,12 @@
   - `permissions: contents: read` only. Cloudflare's example also grants `deployments: write` and passes `GITHUB_TOKEN`, so the action can record a GitHub "deployment". That record is a nice-to-have, so it is left out.
   - `actions/checkout` pinned to v7.0.1 (`3d3c42e5aac5ba805825da76410c181273ba90b1`) with `persist-credentials: false`, so the GitHub token isn't left in `.git/config` for later steps.
   - A `concurrency` group so two deploys never overlap; a newer push waits rather than cancelling one in flight.
-  - Deploys with `--branch=main`, so it lands as production whatever branch the workflow was dispatched from, provided the project's production branch is `main`.
+  - The job uses a GitHub Environment, `production`, whose deployment branches are limited to `main`, and holds both Cloudflare secrets as environment secrets. A run from any other branch can't read them. The job also checks `github.ref == 'refs/heads/main'`, so a dispatch from another branch is skipped rather than failing on missing secrets.
+  - Deploys with `--branch=main`, so it lands as production, provided the project's production branch is `main`.
 - **Still uncertain:** none.
 
 ### The Cloudflare token
-- **Chosen:** a custom API token with one permission, Account > Cloudflare Pages > Edit, limited to the CrabShare account, stored as the repository secret `CLOUDFLARE_API_TOKEN`; the account ID goes in `CLOUDFLARE_ACCOUNT_ID`.
+- **Chosen:** a custom API token with one permission, Account > Cloudflare Pages > Edit, limited to the CrabShare account, stored as the `production` environment secret `CLOUDFLARE_API_TOKEN`; the account ID goes in `CLOUDFLARE_ACCOUNT_ID`.
 - **Still uncertain:** Cloudflare can't limit the token to one Pages project. Whoever holds it can deploy to, or delete, any Pages project in the account. Today that is only `crabshare-landing` (and the old `crabshare` until it is deleted).
 
 ### Keeping the pins current
@@ -39,10 +40,11 @@
 
 **harness-files**
 - The workflow runs on more events than it needs, for example on `pull_request` from forks, where secrets could be reached. Caught by the trigger list being push-to-`main` and manual dispatch only; the reviewer checks it.
+- A run from a branch other than `main` reaches the token. Prevented by the `production` environment's branch rule, which GitHub enforces whatever the branch's copy of the workflow says, provided the secrets exist only as `production` environment secrets and not also as repository secrets.
 - A pin drifts to a tag (`@v4`) that its owner can move. Caught by reviewing that both `uses:` lines are full SHAs.
 
 **dependencies**
-- A compromised `wrangler` or action release runs with the Pages token. Limited by the SHA and version pins (a new release can't arrive unreviewed) and by the token's scope (Pages only, no DNS, no other products, no GitHub access).
+- A compromised `wrangler` or action release runs with the Pages token. Limited by the SHA and version pins (a new release of the action or of `wrangler` itself can't arrive unreviewed, though `wrangler`'s own npm dependencies resolve fresh on each run) and by the token's scope (Pages only, no DNS, no other products, no GitHub access).
 - The token leaks. It is only in GitHub's encrypted secrets, masked in logs, and can be rolled in Cloudflare without touching the workflow.
 
 ## Changes
@@ -58,4 +60,4 @@
 
 ## Owner steps
 
-In the order given in chat with this spec: create the project, create the token, add the two secrets, commit and push, run the workflow, move the domains, delete `crabshare`, uninstall the Cloudflare GitHub app.
+In the order given in chat with this spec: create the project, create the token, create the `production` environment limited to `main` and add the two secrets to it, commit and push, run the workflow, move the domains, delete `crabshare`, uninstall the Cloudflare GitHub app.
