@@ -6,13 +6,24 @@
 # The reviewer pastes the output into the owner's briefing unchanged, then runs the stranger check
 # (docs/systems/dependencies.md) on each newly added package.
 #
-# Usage: scripts/deps-check.sh [base-ref]     (default base: origin/main, the last push)
+# Usage: scripts/deps-check.sh [base-ref]     (default base: where this branch left origin/HEAD)
 # Needs jq for npm projects. Reaches the network only for the vulnerability scan.
 
 set -u
-base="${1:-origin/main}"
 root=$(git rev-parse --show-toplevel) || exit 1
 cd "$root" || exit 1
+
+# Without a base argument, compare against where this branch left the remote's default branch
+# (develop, D11), so changes that landed there since don't show up as this branch's own.
+if [ -n "${1:-}" ]; then
+  base="$1"
+else
+  default_branch=$(git rev-parse --abbrev-ref --verify --quiet origin/HEAD) || {
+    echo "origin/HEAD isn't set, so the default branch is unknown. Run: git remote set-head origin --auto" >&2
+    exit 1
+  }
+  base=$(git merge-base "$default_branch" HEAD) || exit 1
+fi
 
 # Prints a file at the base ref, or in the working tree when ref is "WORKTREE".
 read_at() {

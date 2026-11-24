@@ -1,0 +1,6 @@
+# One Rust version for every machine and for CI, so lints and builds match. Moving to a newer Rust
+# is an ordinary reviewed change to this file.
+[toolchain]
+channel = "1.100.0"
+components = ["clippy", "rustfmt"]
+profile = "minimal"

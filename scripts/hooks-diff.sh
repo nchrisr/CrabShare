@@ -4,16 +4,28 @@
 # output into the owner's briefing unchanged, so the owner reads the commands themselves, not a
 # description of them.
 #
-# Usage: scripts/hooks-diff.sh [base-ref]     (default base: origin/main, the last push)
+# Usage: scripts/hooks-diff.sh [base-ref]     (default base: where this branch left origin/HEAD)
 # Prints a unified diff, or "No changes to anything that runs on its own." Needs jq.
 
 set -u
-base="${1:-origin/main}"
 root=$(git rev-parse --show-toplevel) || exit 1
 cd "$root" || exit 1
 
-# Files whose whole content runs: hook scripts, git hooks, and what Cargo runs at build time.
-script_pattern='^(\.claude/hooks/|\.codex/hooks/|\.husky/|\.githooks/|\.cargo/)|^\.pre-commit-config\.ya?ml$|(^|/)build\.rs$'
+# Without a base argument, compare against where this branch left the remote's default branch
+# (develop, D11), so changes that landed there since don't show up as this branch's own.
+if [ -n "${1:-}" ]; then
+  base="$1"
+else
+  default_branch=$(git rev-parse --abbrev-ref --verify --quiet origin/HEAD) || {
+    echo "origin/HEAD isn't set, so the default branch is unknown. Run: git remote set-head origin --auto" >&2
+    exit 1
+  }
+  base=$(git merge-base "$default_branch" HEAD) || exit 1
+fi
+
+# Files whose whole content runs: hook scripts, git hooks, what Cargo runs at build time, and CI
+# workflows, which run on GitHub's machines.
+script_pattern='^(\.claude/hooks/|\.codex/hooks/|\.husky/|\.githooks/|\.cargo/|\.github/workflows/)|^\.pre-commit-config\.ya?ml$|(^|/)build\.rs$'
 # Files whose hook entries run: agent settings.
 settings_files='.claude/settings.json .codex/config.json'
 

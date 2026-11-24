@@ -6,6 +6,7 @@ owns:
   - 'Cargo.toml'
   - '*/Cargo.toml'
   - 'Cargo.lock'
+  - 'rust-toolchain.toml'
 watch:
   - '^\+?[A-Za-z0-9_-]+ *= *\{[^}]*\b(git|registry) *='
   - '^\+?\[(patch|replace)'
@@ -21,6 +22,7 @@ watch:
 - No change is committed with a known high or critical vulnerability in a crate it adds or upgrades, unless the owner accepts it in writing, with the reason and a date to revisit.
 - Crates come from crates.io. A git or other-registry source, or a `[patch]` override, needs the owner's OK.
 - Every newly added crate passes the stranger check below.
+- The Rust toolchain is pinned to one exact version in `rust-toolchain.toml`, the same for CI and every developer. A change to it is reviewed like a crate upgrade.
 
 ## The stranger check (for each newly added crate)
 `scripts/deps-check.sh` lists the new crates. For each, answer and report:

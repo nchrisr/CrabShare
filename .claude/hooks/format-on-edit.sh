@@ -11,6 +11,9 @@ case "$file" in
 esac
 
 cd "$CLAUDE_PROJECT_DIR" 2>/dev/null || exit 0
+# A hook never downloads: if the Rust version pinned in rust-toolchain.toml isn't installed, rustfmt
+# fails and the edit is left as it is.
+export RUSTUP_AUTO_INSTALL=0
 # rustfmt reads rustfmt.toml from the project; the edition matches Cargo.toml.
 rustfmt --edition 2024 "$file" >/dev/null 2>&1
 exit 0

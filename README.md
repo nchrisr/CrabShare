@@ -4,6 +4,8 @@ A file and text sharing tool for devices on the same network, built with a Rust 
 
 Privacy is the point. Files and text travel directly between browsers, encrypted in transit. The server only introduces devices to each other: it never sees, stores, or logs what you share.
 
+**Status:** early development. Devices on the same network already find each other; sending text and files between them is being built. See [`docs/ROADMAP.md`](docs/ROADMAP.md).
+
 ## How it works
 
 Devices connect to a signaling server. Peers discover each other automatically by subnet and establish direct WebRTC connections for file and text transfer — no accounts, no cloud, no relay.
@@ -47,13 +49,20 @@ Then open `http://localhost:3000` in your browser.
 ## Development
 
 ```bash
-cargo fmt       # format code
-cargo clippy    # lint
-cargo test      # run tests
+cargo fmt --check                                     # formatting
+cargo clippy --locked --all-targets -- -D warnings    # lints
+cargo test --locked                                   # tests
 ```
+
+CI runs these on every pull request. The Rust version is pinned in `rust-toolchain.toml`, and `rustup` installs it on first use.
+
+## Contributing
+
+Pull requests go to `develop`. See [`CONTRIBUTING.md`](CONTRIBUTING.md).
 
 ## Project docs
 
 - [`docs/ROADMAP.md`](docs/ROADMAP.md) — milestones and what's next
 - [`docs/DECISIONS.md`](docs/DECISIONS.md) — design decisions and their rationale
+- [`CONTRIBUTING.md`](CONTRIBUTING.md) — how to send a change
 - [`AGENTS.md`](AGENTS.md) — orientation and coding conventions, for contributors and AI coding agents

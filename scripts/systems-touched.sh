@@ -1,18 +1,28 @@
 #!/bin/bash
 # Lists the system cards a change touches, so the review loop knows which system reviewers to wake.
 #
-# Usage: scripts/systems-touched.sh [base-ref]     (default base: origin/main, the last push)
+# Usage: scripts/systems-touched.sh [base-ref]     (default base: where this branch left origin/HEAD)
 # Output, one line per touched card:  <card path><TAB><involvement><TAB><why>
 # A card is touched when a changed path matches one of its `owns` globs, or when an added line
 # matches one of its `watch` patterns (a tripwire, which raises it to teach-me).
 # Covers committed, uncommitted and untracked changes since the base.
 
 set -u
-# Changes are committed straight to main (D11), so origin/main covers local commits not yet pushed.
-base="${1:-origin/main}"
 cards_dir="${CARDS_DIR:-docs/systems}"
 root=$(git rev-parse --show-toplevel) || exit 1
 cd "$root" || exit 1
+
+# Without a base argument, compare against where this branch left the remote's default branch
+# (develop, D11), so changes that landed there since don't show up as this branch's own.
+if [ -n "${1:-}" ]; then
+  base="$1"
+else
+  default_branch=$(git rev-parse --abbrev-ref --verify --quiet origin/HEAD) || {
+    echo "origin/HEAD isn't set, so the default branch is unknown. Run: git remote set-head origin --auto" >&2
+    exit 1
+  }
+  base=$(git merge-base "$default_branch" HEAD) || exit 1
+fi
 
 changed=$( { git diff --name-only "$base"; git ls-files --others --exclude-standard; } | sort -u)
 # Tripwires look at code, not prose: Markdown is left out, so the cards don't trip themselves.

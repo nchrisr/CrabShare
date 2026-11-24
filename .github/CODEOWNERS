@@ -6,3 +6,11 @@ CLAUDE.md            @nchrisr
 docs/systems/        @nchrisr
 scripts/             @nchrisr
 .github/             @nchrisr
+
+# What the checks run and build with: a pull request could change these to make its own checks pass.
+tests/               @nchrisr
+Cargo.toml           @nchrisr
+Cargo.lock           @nchrisr
+rust-toolchain.toml  @nchrisr
+*build.rs            @nchrisr
+.cargo/              @nchrisr

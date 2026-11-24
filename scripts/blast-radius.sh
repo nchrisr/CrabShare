@@ -3,7 +3,7 @@
 # one, as file:line. Breakage usually lives outside the diff, so reviewers get this list with it.
 # Names only, no source: a reviewer reads the lines it needs.
 #
-# Usage: scripts/blast-radius.sh [base-ref]     (default base: origin/main, the last push)
+# Usage: scripts/blast-radius.sh [base-ref]     (default base: where this branch left origin/HEAD)
 # Covers committed and uncommitted changes since the base. A name counts as touched when its
 # top-level definition changed (an unindented or exported line), or when a changed line sits inside
 # it (from git's hunk headers). Nested helpers and class methods are left out.
@@ -12,10 +12,21 @@
 # its compiler's find-references for exact results.
 
 set -u
-base="${1:-origin/main}"
 limit="${BLAST_LIMIT:-15}"
 root=$(git rev-parse --show-toplevel) || exit 1
 cd "$root" || exit 1
+
+# Without a base argument, compare against where this branch left the remote's default branch
+# (develop, D11), so changes that landed there since don't show up as this branch's own.
+if [ -n "${1:-}" ]; then
+  base="$1"
+else
+  default_branch=$(git rev-parse --abbrev-ref --verify --quiet origin/HEAD) || {
+    echo "origin/HEAD isn't set, so the default branch is unknown. Run: git remote set-head origin --auto" >&2
+    exit 1
+  }
+  base=$(git merge-base "$default_branch" HEAD) || exit 1
+fi
 
 # A definition: keyword then name, or `name = (` / `name = async (` for arrow functions.
 def_re='(function|class|def|fn|func|interface|type|enum|struct|trait)[[:space:]]+\*?[[:space:]]*[A-Za-z_$][A-Za-z0-9_$]*|(const|let|var)[[:space:]]+[A-Za-z_$][A-Za-z0-9_$]*[[:space:]]*='
