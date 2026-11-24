@@ -1,0 +1,46 @@
+# Runs the project's checks on every pull request and every push to develop and main (D11).
+# Pull requests from forks run their own copy of this file, so it holds no secrets and gets a
+# read-only token. Never switch the trigger to its `_target` variant, which hands secrets to that copy.
+name: CI
+
+on:
+  pull_request:
+    branches: [develop, main]
+  push:
+    branches: [develop, main]
+
+permissions:
+  contents: read
+
+# A new push to a pull request cancels its older run. Pushes to develop and main are never
+# cancelled, so every commit there ends with a result and can be released.
+concurrency:
+  group: ci-${{ github.event_name == 'pull_request' && github.event.pull_request.number || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  # The rulesets require this job by name; renaming it blocks every merge and release.
+  checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # rustup reads rust-toolchain.toml and installs that exact version with clippy and rustfmt.
+      - name: Install Rust
+        run: rustup toolchain install
+
+      - name: Format
+        run: cargo fmt --check
+
+      - name: Clippy
+        run: cargo clippy --locked --all-targets -- -D warnings
+
+      - name: Tests
+        run: cargo test --locked
+
+      - name: Doc references
+        run: python3 scripts/doc-refs-check.py

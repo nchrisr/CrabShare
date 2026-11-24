@@ -17,6 +17,7 @@ src/subnet.rs      subnet_key(): how peers are grouped
 src/device.rs      device type from the ?device= query or the User-Agent
 src/messages.rs    SignalingMessage and DeviceKind, the WebSocket wire format
 static/            frontend (plain HTML/CSS/JS), served as the router's fallback
+landing/           the public landing page, deployed from main (D13)
 docs/ROADMAP.md    milestones, in order
 docs/STATUS.md     maintainer's local notes on current state; gitignored, may not exist
 docs/DECISIONS.md  design decisions with rationale (D1, D2, …)
@@ -24,6 +25,8 @@ docs/specs/        approved plans for tier 2 and 3 changes in progress, written 
 docs/systems/      one card per system: its files, invariants and tripwires
 scripts/           review-loop helpers (systems-touched, hooks-diff, blast-radius, deps-check) and doc-refs-check
 .claude/           commands (/spec, /review-loop), agents, the Stop hook, settings
+.github/           CI and deploy workflows, CODEOWNERS
+rust-toolchain.toml the pinned Rust version, for CI and every developer
 .harness-version   the version of the coding agents harness these files were built from
 ```
 
@@ -81,7 +84,7 @@ git show <that commit>^:docs/specs/<name>
 
 ### Build and run
 
-Rust edition 2024, stable toolchain.
+Rust edition 2024, on the stable version pinned in `rust-toolchain.toml`.
 
 ```bash
 cargo build
@@ -102,7 +105,7 @@ cargo clippy --all-targets -- -D warnings
 cargo fmt --check
 ```
 
-There is no CI, and the only test outside `src/` is a guard in `tests/` that checks spec file names. The Stop hook (`.claude/hooks/check-on-stop.sh`) checks that docs still point at real files (`scripts/doc-refs-check.py`), keeps this file under 250 lines, and runs clippy and the tests with `--locked` at the end of any turn that changed `.rs` or `.toml` files. Check `/ws` by hand with two clients, either two browser tabs or `websocat ws://127.0.0.1:3000/ws`.
+CI (`.github/workflows/ci.yml`) runs the three commands above with `--locked`, plus `scripts/doc-refs-check.py`, on every pull request and every push to `develop` and `main`; its job is `checks`, which the rulesets require by name. The only test outside `src/` is a guard in `tests/` that checks spec file names. The Stop hook (`.claude/hooks/check-on-stop.sh`) checks that docs still point at real files (`scripts/doc-refs-check.py`), keeps this file under 250 lines, and runs clippy and the tests with `--locked` at the end of any turn that changed `.rs` or `.toml` files. Check `/ws` by hand with two clients, either two browser tabs or `websocat ws://127.0.0.1:3000/ws`.
 
 ### Hard constraints
 
@@ -146,7 +149,7 @@ There is no CI, and the only test outside `src/` is a guard in `tests/` that che
 - Ask the owner only what is theirs: product, cost, risk appetite, and anything on a teach-me card.
 
 **Changes**
-- Changes are committed straight to `main` by the owner (D11). Agents never commit or push.
+- The owner pushes to `develop`; outside contributors open pull requests to `develop`. `main` takes releases only, through a pull request from `develop` merged with a merge commit (D11). Agents never commit or push.
 - Run the checks above before claiming anything is done.
 - After restarting the server, prove it restarted before asking for a retest.
 - Never run git commands that move or discard uncommitted work without saying so first.

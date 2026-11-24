@@ -133,17 +133,27 @@ Status legend: **settled** — deliberate, change only with a good reason. **fir
 
 ---
 
-## D11. Changes are committed straight to `main` - settled
+## D11. Work goes to `develop`; `main` takes releases - settled
 
-**Decision.** There are no feature branches or pull requests. The owner reviews each change locally and commits it to `main`. Agents never commit or push.
+**Decision.**
+- `develop` is GitHub's default branch and takes all work. The owner pushes to it directly. Outside contributors open pull requests to it.
+- `main` takes only releases: a pull request from `develop` to `main`, merged by the owner with a merge commit. A push to `main` is what deploys the landing page (D13), so merging an outside change never makes it live by itself.
+- `main` never gets a change that isn't on `develop` first. An urgent fix goes to `develop`, then is released.
+- Agents never commit or push.
 
-**Why.** One maintainer. A pull request would add a step without adding a reviewer: GitHub doesn't let an author approve their own pull request.
+**Why.** Outside pull requests need automatic checks and a step between "merged" and "live". The owner keeps pushing straight to `develop` because GitHub doesn't let an author approve their own pull request, so for the owner's own work a pull request adds a step without adding a reviewer. Releases are merge commits because a squash or rebase merge rewrites `develop`'s commits into new ones on `main`, and the two branches drift until releases conflict.
 
-**Rejected.** Branch and pull request per change for the owner.
+**Rulesets.** A repository admin bypass skips every rule in its ruleset, so rules that must hold for the owner too sit in rulesets with no bypass.
+- `protect_develop` (`develop`): a pull request with one approval and code-owner review (`.github/CODEOWNERS`), the extra approval for unattributed changes, stale approvals dismissed on a new push, approval of the most recent push, squash merges only, and the `checks` status from GitHub Actions on an up-to-date branch. Admin bypass "always".
+- `protect_main` (`main`): restrict updates, so only the bypass list can change `main` and no outside pull request can be merged into it; a pull request with one approval and code-owner review; merge commits only. Admin bypass "always".
+- `branch_history` (`develop` and `main`): no deletion, no force push. No bypass.
+- `release_checks` (`main`): the `checks` status from GitHub Actions. No bypass.
 
-**Ruleset (2026-11-22).** The `protect_main` ruleset on `main` requires a pull request with one approval and code-owner review (`.github/CODEOWNERS`), and blocks force pushes and deletion. The repository admin role is on its bypass list ("always"), so the owner still commits straight to `main`; everyone else, including any app or token, goes through the owner.
+**CI.** `.github/workflows/ci.yml` runs the checks (`cargo fmt --check`, clippy and the tests with `--locked`, `scripts/doc-refs-check.py`) on every pull request and every push to `develop` and `main`. It uses the `pull_request` trigger, a read-only token, no secrets, and no third-party actions; its one action is pinned to a commit. `rust-toolchain.toml` pins the Rust version for CI and every developer alike. A pull request runs its own copy of the checks, so one that touches them is read before its green check counts.
 
-**Consequences.** The review loop's record goes in the maintainer's notes, not a pull request comment. `scripts/systems-touched.sh` and `scripts/hooks-diff.sh` compare against `origin/main`, the last push.
+**Rejected.** Outside pull requests straight into `main`: merging would deploy. A pull request for each of the owner's own changes: revisit as the repository grows. Squash, rebase or fast-forward releases: the first two drift, the last leaves no record of a release. Git-flow's release and hotfix branches: more branches than one maintainer needs.
+
+**Consequences.** The review scripts compare against where the current branch left the default branch (`git merge-base origin/HEAD HEAD`). The review loop's record goes in the maintainer's notes. Spec: `docs/specs/2026-11-24_develop-branch-flow.md`.
 
 ---
 
