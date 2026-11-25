@@ -5,6 +5,7 @@ involvement: teach-me
 owns:
   - 'src/main.rs'
   - 'src/peer.rs'
+  - 'src/origin.rs'
 watch:
   - '\.route\(|on_upgrade\(|fallback_service\('
   - 'Uuid::new_v4\(\)'
@@ -20,6 +21,7 @@ watch:
 - The server assigns every peer ID (`Uuid::new_v4` in the `/ws` handler). A client never chooses its own.
 - When relaying, `from` is overwritten with the sender's real peer ID, whatever the client sent.
 - A message goes to `to` only if `to` is in the sender's own subnet group. An unknown `to` is dropped and logged by type.
+- A `/ws` request with an `Origin` header is upgraded only if `Host` is an IP literal, `localhost` or a `.local` name and `Origin` names the same authority (D15). Refused requests never get a peer ID.
 - `welcome` is the first message every peer receives, queued before the peer is visible to anyone else.
 
 ## Tripwires (changes that pull you in, even from a trusted area)
@@ -31,7 +33,7 @@ watch:
 - No incidents yet. Routing of `offer`, `answer` and `ice_candidate` isn't built (M2).
 
 ## Checks
-- **Programs:** unit tests in `src/peer.rs`.
+- **Programs:** unit tests in `src/peer.rs` and `src/origin.rs`. The origin tests cover the rules, not the wiring: a `curl` upgrade with a foreign `Origin` must get 403.
 - **Reviewer:** for each new message path: can a client make it claim another `from`? Can it reach a peer in another subnet group? What happens with an unknown or stale `to`?
 
 ## Briefing

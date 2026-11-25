@@ -37,7 +37,7 @@ Status legend: **settled** — deliberate, change only with a good reason. **fir
 **Decision.** Both are supported targets. The server binds `0.0.0.0` so LAN devices can reach it.
 
 **Consequences.**
-- Peer discovery must work when clients connect directly (LAN, `ConnectInfo` gives the real client IP) **and** when they connect through a reverse proxy (public hosting, `ConnectInfo` gives the proxy's IP for everyone). The second case needs `X-Forwarded-For` / `Forwarded` header handling, gated so it's only trusted when actually behind a proxy. **Not yet implemented — planned for M7, see ROADMAP.md.**
+- Peer discovery must work when clients connect directly (LAN, `ConnectInfo` gives the real client IP) **and** when they connect through a reverse proxy (public hosting, `ConnectInfo` gives the proxy's IP for everyone). The second case needs `X-Forwarded-For` / `Forwarded` header handling, gated so it's only trusted when actually behind a proxy. **Not yet implemented — planned for M7, see ROADMAP.md.** Until then the `/ws` Origin and Host checks refuse browsers that reach the server by a domain name, proxy or not (D15).
 - TLS: browsers require a secure context for some WebRTC features. On a public host TLS comes from the proxy; on a LAN `http://192.168.x.x` counts as insecure — this needs investigating before the WebRTC work. **Open question.**
 
 ---
@@ -190,3 +190,23 @@ Status legend: **settled** — deliberate, change only with a good reason. **fir
 **Why.** It is the Rust ecosystem's convention, so the code, and later the `crabshare-core` crate (D10), can be reused anywhere Rust crates are. Apache-2.0 adds an explicit patent grant from contributors, which matters for the hashing, Merkle and pairing work. MIT keeps compatibility with GPLv2 projects, which Apache-2.0 alone lacks.
 
 **Rejected.** MIT alone: no patent grant. Apache-2.0 alone: incompatible with GPLv2. A copyleft license (GPL, AGPL): it would require shared changes to stay open, but it narrows who can reuse the code and goes against the ecosystem's norm.
+
+---
+
+## D15. Browser connections must come from the server's own page - settled
+
+**Decision.** Before upgrading `/ws`, the server checks the request's `Origin` and `Host` headers (`src/origin.rs`):
+
+- **No `Origin`:** allowed. Every browser sends `Origin` on WebSocket requests and scripts can't remove it, so its absence means a tool (`websocat`) or a native client, which could connect directly anyway. A present but empty, repeated or unreadable `Origin` is refused, never treated as absent.
+- **`Host` must be an address DNS rebinding can't fake:** an IPv4 or bracketed IPv6 literal, `localhost`, or a `.local` name. With DNS rebinding a hostile site points its own name at a LAN address, so the browser treats the server as that site and `Origin` and `Host` both carry the hostile name; checking `Host` is what stops it. `.local` names are resolved by multicast DNS inside the LAN, so only someone already on the network can point one at an address.
+- **`Origin` must name the same server as `Host`:** `http://` or `https://` followed by exactly the `Host` value, compared case-insensitively. Browsers omit the default port in both. This stops a page on another site connecting straight to the server's address. `Origin: null` fails.
+- **Refused requests** get `403 Forbidden` before the upgrade, so they never get a socket, a group or a peer ID. Logs carry a fixed reason label and a count, only on the 1st, 2nd, 4th, 8th... refusal per reason, never header values or the client address (D9).
+- **The page** checks its own address with the same rule before connecting, and explains how to reach the server instead of retrying, because a browser can't read a 403 on a WebSocket handshake.
+
+**Consequences.** Until M7, browsers are accepted only at an IP address, `localhost` or a `.local` name, with or without a reverse proxy. Real domain names, custom names from a router's DNS or a VPN, bare hostnames, and app shells that send their own origin (`tauri://`, `capacitor://`, `null`) are refused.
+
+**M7 requirement.** The configuration M7 adds must list allowed **origins**, not only hosts, and still require `Origin` to match one of them. A host-only list would let any site connect to the public instance.
+
+**Invariant.** Nothing untrusted runs in CrabShare's own origin: the check reduces to "the script runs in CrabShare's origin", so a received file must never be rendered in it (download only, or a sandboxed opaque origin), and text from peers is set as text, never as HTML. M6 must keep this.
+
+From `docs/specs/2026-11-25_origin-check.md`.

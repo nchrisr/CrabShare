@@ -15,6 +15,7 @@ src/main.rs        entry point, router, /ws handler
 src/peer.rs        Peer, the shared PeerMap, remove_peer(), send_to_each()
 src/subnet.rs      subnet_key(): how peers are grouped
 src/device.rs      device type from the ?device= query or the User-Agent
+src/origin.rs      check_upgrade_origin(): which browser pages may open /ws
 src/messages.rs    SignalingMessage and DeviceKind, the WebSocket wire format
 static/            frontend (plain HTML/CSS/JS), served as the router's fallback
 landing/           the public landing page, deployed from main (D13)

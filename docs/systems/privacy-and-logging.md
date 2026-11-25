@@ -20,6 +20,7 @@ watch:
 - The server never stores transferred content, and writes nothing to disk.
 - Logs carry only connection events, peer IDs, subnet keys, message types, counts and errors (D9). Never SDP or ICE payloads, file names or sizes, text, or anything from a DataChannel.
 - File hashes and Merkle roots never go through signaling (D10).
+- `/ws` refusal logs carry a fixed reason label and a count only, never header values or the client address (D15).
 - The page contacts no host but the CrabShare server unless a decision says so. A STUN or TURN server learns each user's IP address.
 
 ## Tripwires (changes that pull you in, even from a trusted area)

@@ -44,7 +44,7 @@ Devices connect to a signaling server. Peers discover each other automatically b
 cargo run
 ```
 
-Then open `http://localhost:3000` in your browser.
+Then open `http://localhost:3000` in your browser. From another device on the same network, open `http://<this machine's LAN IP>:3000` or its `.local` name. Domain names and reverse proxies aren't supported yet: the server refuses browsers that reach it any other way.
 
 ## Development
 

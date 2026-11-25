@@ -16,6 +16,8 @@ watch:
 
 ## Invariants (always true)
 - Text from the server or another peer goes into the page as text (`textContent`), never as HTML.
+- Nothing untrusted runs in the app's origin: a received file is never rendered in it (download only, or a sandboxed opaque origin), because `/ws` trusts every script in that origin (D15).
+- The page checks its own address with the same rule as `src/origin.rs` before connecting (D15).
 - No external scripts, fonts or trackers; the page loads only from the CrabShare server.
 - The peer list matches the server's `welcome`, `peer_joined` and `peer_left` messages.
 

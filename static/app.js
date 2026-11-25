@@ -395,7 +395,13 @@ function setStatus(state, text) {
     statusEl.dataset.state = state;
     statusEl.textContent = text;
     signalStateEl.dataset.state = state;
-    signalStateEl.textContent = state === "connected" ? "Connected" : text.replace("…", "");
+    if (state === "connected") {
+        signalStateEl.textContent = "Connected";
+    } else if (state === "refused") {
+        signalStateEl.textContent = "Not connected";
+    } else {
+        signalStateEl.textContent = text.replace("…", "");
+    }
 }
 
 function addFeed(type, id) {
@@ -673,7 +679,23 @@ function handle(message) {
     }
 }
 
+// Mirrors the server's rule in src/origin.rs: browsers may connect only at an address
+// DNS rebinding can't fake. A browser can't read the server's 403, so without this
+// check a refused visitor would see "Reconnecting…" forever.
+function isServableHostname(hostname) {
+    if (/^\d{1,3}(\.\d{1,3}){3}$/.test(hostname)) return true;
+    if (hostname.startsWith("[") && hostname.endsWith("]")) return true;
+    const name = hostname.toLowerCase();
+    if (name === "localhost") return true;
+    return /^[a-z0-9-]+(\.[a-z0-9-]+)*\.local$/.test(name);
+}
+
 function connect() {
+    if (!isServableHostname(location.hostname)) {
+        setStatus("refused", "Open CrabShare by IP address, localhost or a .local name");
+        return;
+    }
+
     const scheme = location.protocol === "https:" ? "wss" : "ws";
     const socket = new WebSocket(`${scheme}://${location.host}/ws`);
 
