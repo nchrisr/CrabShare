@@ -7,6 +7,8 @@ owns:
   - 'landing/*'
 watch:
   - '\.innerHTML *=|insertAdjacentHTML\(|document\.write\(|\beval\(|new Function\('
+  - 'createObjectURL\(|<iframe|srcdoc|window\.open\(|<object|<embed'
+  - 'isServableHostname'
 ---
 
 # Frontend
@@ -23,6 +25,8 @@ watch:
 
 ## Tripwires (changes that pull you in, even from a trusted area)
 - Writing HTML from a string, or running a string as code.
+- Showing or opening received content in the page (blob or object URL, iframe, object or embed): `/ws` trusts every script in the app's origin (D15).
+- Changing `isServableHostname`, the page's copy of the host rule in `src/origin.rs`.
 
 ## How it breaks
 - No incidents yet.

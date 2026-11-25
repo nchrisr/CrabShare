@@ -203,7 +203,7 @@ Status legend: **settled** — deliberate, change only with a good reason. **fir
 - **Refused requests** get `403 Forbidden` before the upgrade, so they never get a socket, a group or a peer ID. Logs carry a fixed reason label and a count, only on the 1st, 2nd, 4th, 8th... refusal per reason, never header values or the client address (D9).
 - **The page** checks its own address with the same rule before connecting, and explains how to reach the server instead of retrying, because a browser can't read a 403 on a WebSocket handshake.
 
-**Consequences.** Until M7, browsers are accepted only at an IP address, `localhost` or a `.local` name, with or without a reverse proxy. Real domain names, custom names from a router's DNS or a VPN, bare hostnames, and app shells that send their own origin (`tauri://`, `capacitor://`, `null`) are refused.
+**Consequences.** Until M7, browsers are accepted only at an IP address, `localhost` or a `.local` name. Behind a reverse proxy this holds only if the proxy passes the browser's original `Host` through; a proxy that rewrites `Host` (nginx's default, for example) gets every browser refused as an origin mismatch. Real domain names, custom names from a router's DNS or a VPN, bare hostnames, and app shells that send their own origin (`tauri://`, `capacitor://`, `null`) are refused.
 
 **M7 requirement.** The configuration M7 adds must list allowed **origins**, not only hosts, and still require `Origin` to match one of them. A host-only list would let any site connect to the public instance.
 

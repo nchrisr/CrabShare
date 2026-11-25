@@ -34,6 +34,7 @@ watch:
 
 ## Checks
 - **Programs:** unit tests in `src/peer.rs` and `src/origin.rs`. The origin tests cover the rules, not the wiring: a `curl` upgrade with a foreign `Origin` must get 403.
+- **Keep in step:** a change to the host rule in `src/origin.rs` updates `isServableHostname` in `static/app.js` to match.
 - **Reviewer:** for each new message path: can a client make it claim another `from`? Can it reach a peer in another subnet group? What happens with an unknown or stale `to`?
 
 ## Briefing

@@ -114,7 +114,7 @@ CI (`.github/workflows/ci.yml`) runs the three commands above with `--locked`, p
 - **Logging.** Allowed: connection events, peer IDs, subnet keys, message *types*, counts, errors. Never logged: SDP or ICE payloads, file names or sizes, text content, anything from a DataChannel (D9).
 - **The backend is Rust.** Web technologies are used in `static/` only (D2). File hashing and verification in the browser is also Rust: a `crabshare-core` crate compiled to WebAssembly (D10, not built yet).
 - **File hashes and Merkle roots never go through signaling.** They travel only over the DataChannel (D10).
-- **Both deployment modes are first-class:** self-hosted on a LAN, and a public instance behind a reverse proxy (D3). Behind a proxy, `ConnectInfo` holds the proxy's IP, not the client's. Trusted-proxy handling is not built yet (M7).
+- **Both deployment modes are first-class:** self-hosted on a LAN, and a public instance behind a reverse proxy (D3). Behind a proxy, `ConnectInfo` holds the proxy's IP, not the client's. Trusted-proxy handling is not built yet (M7). Until then, browsers are accepted only at an IP address, `localhost` or a `.local` name (D15); loosening the `/ws` Origin and Host check is tier 3.
 - Decisions marked **settled** in `docs/DECISIONS.md` change only together with an update to their entry. Record new design choices there.
 
 ## Part 2: Coding conventions

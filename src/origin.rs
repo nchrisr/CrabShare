@@ -2,15 +2,11 @@
 //! that DNS rebinding can't fake. Requests without an `Origin` header (tools, native
 //! clients) are not browsers and pass. See D15 in `docs/DECISIONS.md`.
 
-use std::net::Ipv4Addr;
-use std::net::Ipv6Addr;
-use std::sync::atomic::AtomicU64;
-use std::sync::atomic::Ordering;
+use std::net::{Ipv4Addr, Ipv6Addr};
+use std::sync::atomic::{AtomicU64, Ordering};
 
-use axum::http::HeaderMap;
-use axum::http::HeaderName;
-use axum::http::header::HOST;
-use axum::http::header::ORIGIN;
+use axum::http::header::{HOST, ORIGIN};
+use axum::http::{HeaderMap, HeaderName};
 
 /// Why an upgrade was refused. A fixed label, so no client text ever reaches a log.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -147,7 +143,7 @@ fn is_allowed_host(host: &str) -> bool {
     is_local_name(host)
 }
 
-/// `name.local`, with at least one character before the dot.
+/// `name.local`, where every dot-separated label of `name` is non-empty.
 fn is_local_name(host: &str) -> bool {
     const SUFFIX: &str = ".local";
     if host.len() <= SUFFIX.len() {
@@ -155,7 +151,7 @@ fn is_local_name(host: &str) -> bool {
     }
     // Safe to slice by bytes: callers have already checked the host is ASCII.
     let (name, suffix) = host.split_at(host.len() - SUFFIX.len());
-    suffix.eq_ignore_ascii_case(SUFFIX) && !name.ends_with('.')
+    suffix.eq_ignore_ascii_case(SUFFIX) && name.split('.').all(|label| !label.is_empty())
 }
 
 /// The `host[:port]` part of an `http://` or `https://` origin. `None` for `null`,
@@ -202,14 +198,10 @@ pub static REFUSALS: RefusalCounts = RefusalCounts::new();
 
 #[cfg(test)]
 mod tests {
-    use axum::http::HeaderMap;
-    use axum::http::HeaderValue;
-    use axum::http::header::HOST;
-    use axum::http::header::ORIGIN;
+    use axum::http::header::{HOST, ORIGIN};
+    use axum::http::{HeaderMap, HeaderValue};
 
-    use super::RefusalCounts;
-    use super::RefusalReason;
-    use super::check_upgrade_origin;
+    use super::{RefusalCounts, RefusalReason, check_upgrade_origin};
 
     fn headers(host: Option<&str>, origin: Option<&str>) -> HeaderMap {
         let mut map = HeaderMap::new();
@@ -361,5 +353,17 @@ mod tests {
         }
         assert_eq!(logged, vec![1, 2, 4, 8, 16]);
         assert_eq!(counts.record(RefusalReason::HostNotAllowed), Some(1));
+    }
+
+    #[test]
+    fn refuses_local_names_with_an_empty_label() {
+        for host in ["a..b.local", ".a.local"] {
+            let origin = format!("http://{host}");
+            assert_eq!(
+                check(Some(host), Some(&origin)),
+                Err(RefusalReason::HostNotAllowed),
+                "{host}"
+            );
+        }
     }
 }

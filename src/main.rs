@@ -14,11 +14,9 @@ use axum::extract::RawQuery;
 use axum::extract::State;
 use axum::extract::connect_info::ConnectInfo;
 use axum::extract::ws::{Message, Utf8Bytes, WebSocket, WebSocketUpgrade};
-use axum::http::HeaderMap;
-use axum::http::StatusCode;
 use axum::http::header::USER_AGENT;
-use axum::response::IntoResponse;
-use axum::response::Response;
+use axum::http::{HeaderMap, StatusCode};
+use axum::response::{IntoResponse, Response};
 use axum::routing::get;
 use tokio::net::TcpListener;
 use tokio::sync::{Mutex, mpsc};
@@ -27,8 +25,7 @@ use uuid::Uuid;
 
 use crate::device::connecting_device_kind;
 use crate::messages::SignalingMessage;
-use crate::origin::REFUSALS;
-use crate::origin::check_upgrade_origin;
+use crate::origin::{REFUSALS, check_upgrade_origin};
 use crate::peer::{Peer, PeerMap, remove_peer, send_to_each};
 use crate::subnet::subnet_key;
 
